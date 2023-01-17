@@ -81,6 +81,22 @@ public class Board {
     }
 
     /**
+     * Check whether all positions on the board are filled with black and white stones.
+     *
+     * @return true if all positions are filled, false if one position is still empty.
+     */
+    public boolean isFull() {
+        for (int row = 0; row < SIZE; row++) {
+            for (int column = 0; column < SIZE; column++) {
+                if (board[row][column] == Stone.EMPTY) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    /**
      * Places the stone of interest on a specific position (after checking if this position is valid and if this
      * position is empty).
      *
@@ -93,7 +109,6 @@ public class Board {
             board[row][column] = stone;
         }
     }
-
 //    public void printBoard() { // can be deleted in the end; only check to see how/if it works as expected.
 //        // print the column numbers on top
 //        System.out.print("   ");
@@ -134,5 +149,7 @@ public class Board {
 //        board.isEmptyPosition(11, 2);
 //        board.placeStone(14, 2, Stone.BLACK);
 //        board.getStone(11, 2);
+//        board.placeStone(0,0,Stone.BLACK);
+//        board.isBoardFull();
 //    }
 }

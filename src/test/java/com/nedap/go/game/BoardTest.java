@@ -55,7 +55,7 @@ public class BoardTest {
         assertEquals(Stone.WHITE, copyBoard.getStone(1, 3));
         assertEquals(Stone.WHITE, copyBoard.getStone(1, 4));
         // Another test, to confirm that after placing the stone on the board, it is not directly visible on the copy
-        // of the board too. It is, however, after copying the board.
+        // of the board too. However, it is after copying the board.
         board.placeStone(1, 5, Stone.WHITE);
         assertNotEquals(Stone.WHITE, copyBoard.getStone(1, 5));
         copyBoard = board.copyBoard();
@@ -70,6 +70,19 @@ public class BoardTest {
         assertTrue(board.isEmptyPosition(2, 2));
         board.placeStone(2, 2, Stone.BLACK);
         assertFalse(board.isEmptyPosition(2, 2));
+        // If stone is placed outside boundaries of the board, the isEmptyPosition will return false:
         assertFalse(board.isEmptyPosition(-1, 2));
+    }
+
+    @Test
+    public void testIsFull() {
+        assertFalse(board.isFull());
+        // place black stones on all positions of the board:
+        for (int row = 0; row < Board.SIZE; row++) {
+            for (int column = 0; column < Board.SIZE; column++) {
+                board.placeStone(row, column, Stone.BLACK);
+            }
+        }
+        assertTrue(board.isFull());
     }
 }

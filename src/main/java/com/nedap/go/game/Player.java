@@ -12,8 +12,9 @@ public class Player {
 
     /**
      * Constructor to create a new player. Each player has a name and uses either a black or a white stone.
+     *
      * @param username represents the name of the player
-     * @param stone represents the stone this player uses.
+     * @param stone    represents the stone this player uses.
      */
     public Player(String username, Stone stone) {
         this.username = username;
@@ -22,6 +23,7 @@ public class Player {
 
     /**
      * Get the name of this player.
+     *
      * @return the name of the player.
      */
     public String getUsername() {
@@ -30,6 +32,7 @@ public class Player {
 
     /**
      * Get the stone this player uses.
+     *
      * @return the stone this player uses.
      */
     public Stone getStone() {
