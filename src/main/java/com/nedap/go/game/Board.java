@@ -15,7 +15,11 @@ public class Board {
      */
     public Board() {
         board = new Stone[DIMENSION][DIMENSION];
-        reset();
+        for (int row = 0; row < DIMENSION; row++) {
+            for (int column = 0; column < DIMENSION; column++) {
+                board[row][column] = Stone.EMPTY;
+            }
+        }
     }
 
     /**
@@ -133,17 +137,6 @@ public class Board {
     public void setPosition(int row, int column, Stone stone) {
         if (isPosition(row, column) && isEmptyPosition(row, column)) {
             board[row][column] = stone;
-        }
-    }
-
-    /**
-     * Empties all positions of this board (i.e., let all fields refer to the value Stone.EMPTY).
-     */
-    public void reset() {
-        for (int row = 0; row < DIMENSION; row++) {
-            for (int column = 0; column < DIMENSION; column++) {
-                board[row][column] = Stone.EMPTY;
-            }
         }
     }
 
