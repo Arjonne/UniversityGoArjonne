@@ -56,7 +56,8 @@ public class Board {
      */
     public Stone getStone(int row, int column) {
         if (!isValidPosition(row, column)) {
-            //TODO what to return? Of hoort deze check hier sowieso niet, maar in Game class?
+            return Stone.EMPTY;
+            //TODO check return? Of hoort deze check hier sowieso niet, maar in Game class?
         }
         return board[row][column];
     }
@@ -70,7 +71,7 @@ public class Board {
      */
     public boolean isEmptyPosition(int row, int column) {
         if (!isValidPosition(row, column)) {
-            return false; //TODO check of dit inderdaad 'false' is? of hoort dit hier uberhaupt niet maar in Game class?
+            return false; //TODO check return? Of hoort dit hier uberhaupt niet maar in Game class?
         }
         if (getStone(row, column) != Stone.EMPTY) {
             System.out.println("This position is already in use: the stone on this position is " + getStone(row, column) + ".");
@@ -93,7 +94,6 @@ public class Board {
         }
     }
 
-    //
 //    public void printBoard() { // can be deleted in the end; only check to see how/if it works as expected.
 //        // print the column numbers on top
 //        System.out.print("   ");

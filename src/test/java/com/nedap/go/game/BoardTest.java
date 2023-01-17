@@ -24,7 +24,7 @@ public class BoardTest {
     public void testIsValidPosition() {
         assertFalse(board.isValidPosition(-1, 0));
         assertTrue(board.isValidPosition(0, 0));
-        assertTrue(board.isValidPosition(3, Board.SIZE - 2));
+        assertTrue(board.isValidPosition(3, Board.SIZE - 1));
         assertFalse(board.isValidPosition(4, Board.SIZE));
     }
 
@@ -36,8 +36,10 @@ public class BoardTest {
         board.placeStone(0, 0, Stone.BLACK);
         assertEquals(Stone.BLACK, board.getStone(0, 0));
         assertEquals(Stone.EMPTY, board.getStone(0, 1));
-        // no checks for setting a stone on / getting a stone from a position out of boundaries of the board OR setting
-        // a stone on a non-empty position as this has been checked by other tests before.
+        // If location is outside the boundaries of the board, getStone() will return EMPTY and give an error message.
+        assertEquals(Stone.EMPTY, board.getStone(0, Board.SIZE));
+        // no checks for setting a stone on a position out of boundaries of the board OR setting a stone on a non-empty
+        // position as this has been checked by other tests before.
     }
 
     /**
@@ -68,6 +70,6 @@ public class BoardTest {
         assertTrue(board.isEmptyPosition(2, 2));
         board.placeStone(2, 2, Stone.BLACK);
         assertFalse(board.isEmptyPosition(2, 2));
-        assertFalse(board.isEmptyPosition(-1,2));
+        assertFalse(board.isEmptyPosition(-1, 2));
     }
 }
