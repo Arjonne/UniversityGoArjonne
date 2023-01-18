@@ -36,10 +36,21 @@ public class BoardTest {
         board.placeStone(0, 0, Stone.BLACK);
         assertEquals(Stone.BLACK, board.getStone(0, 0));
         assertEquals(Stone.EMPTY, board.getStone(0, 1));
-        // If location is outside the boundaries of the board, getStone() will return EMPTY and give an error message.
-        assertEquals(Stone.EMPTY, board.getStone(0, Board.SIZE));
-        // no checks for setting a stone on a position out of boundaries of the board OR setting a stone on a non-empty
-        // position as this has been checked by other tests before.
+        board.placeStone(0, 1, Stone.WHITE);
+        assertEquals(Stone.WHITE, board.getStone(0, 1));
+        // no checks for placing a stone on a position out of boundaries of the board OR placing a BLACK/WHITE stone on
+        // a non-empty position as this has been checked by other tests before.
+    }
+
+    /**
+     * Test to check whether a stone can be removed using removeStone() and check if getStone() does correctly return EMPTY after removal.
+     */
+    @Test
+    public void testRemoveAndGetStone() {
+        board.placeStone(1,1,Stone.BLACK);
+        assertEquals(Stone.BLACK, board.getStone(1,1));
+        board.removeStone(1,1);
+        assertEquals(Stone.EMPTY, board.getStone(1,1));
     }
 
     /**
@@ -49,17 +60,17 @@ public class BoardTest {
     public void testCopyBoard() {
         // First, place stones on the board. After copying the board, check whether these placed stones are on the copy
         // of the board as well.
-        board.placeStone(1, 3, Stone.WHITE);
-        board.placeStone(1, 4, Stone.WHITE);
+        board.placeStone(2, 2, Stone.WHITE);
+        board.placeStone(2, 3, Stone.WHITE);
         Board copyBoard = board.copyBoard();
-        assertEquals(Stone.WHITE, copyBoard.getStone(1, 3));
-        assertEquals(Stone.WHITE, copyBoard.getStone(1, 4));
+        assertEquals(Stone.WHITE, copyBoard.getStone(2, 2));
+        assertEquals(Stone.WHITE, copyBoard.getStone(2, 3));
         // Another test, to confirm that after placing the stone on the board, it is not directly visible on the copy
         // of the board too. However, it is after copying the board.
-        board.placeStone(1, 5, Stone.WHITE);
-        assertNotEquals(Stone.WHITE, copyBoard.getStone(1, 5));
+        board.placeStone(2, 4, Stone.WHITE);
+        assertNotEquals(Stone.WHITE, copyBoard.getStone(2, 4));
         copyBoard = board.copyBoard();
-        assertEquals(Stone.WHITE, copyBoard.getStone(1, 5));
+        assertEquals(Stone.WHITE, copyBoard.getStone(2, 4));
     }
 
     /**
@@ -67,11 +78,11 @@ public class BoardTest {
      */
     @Test
     public void testIsEmptyPosition() {
-        assertTrue(board.isEmptyPosition(2, 2));
-        board.placeStone(2, 2, Stone.BLACK);
-        assertFalse(board.isEmptyPosition(2, 2));
-        // If stone is placed outside boundaries of the board, the isEmptyPosition will return false:
-        assertFalse(board.isEmptyPosition(-1, 2));
+        assertTrue(board.isEmptyPosition(3, 3));
+        board.placeStone(3, 3, Stone.BLACK);
+        assertFalse(board.isEmptyPosition(3, 3));
+        // no checks for checking the position that is out of boundaries of the board as this has been checked by
+        // other tests before.
     }
 
     @Test

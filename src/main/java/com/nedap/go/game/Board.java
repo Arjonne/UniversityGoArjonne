@@ -4,8 +4,8 @@ package com.nedap.go.game;
  * Represents the board of the GO game.
  */
 public class Board {
-    public static final int SIZE = 9; // represents the number of rows and columns of the board.
-    private final Stone[][] board; // the board is represented as a 2D array.
+    public static final int SIZE = 9; // represents the number of rows and columns of the board
+    private final Stone[][] board; // the board is represented as a 2D array, filled with stones (either BLACK, WHITE or EMPTY)
 
     /**
      * Creates an empty board.
@@ -20,7 +20,7 @@ public class Board {
     }
 
     /**
-     * Creates a copy of this field.
+     * Creates a copy of the current state of the board.
      */
     public Board copyBoard() {
         Board copyBoard = new Board();
@@ -33,11 +33,11 @@ public class Board {
     }
 
     /**
-     * Checks whether the position a player wants to place a stone is valid (= does exist).
+     * Checks whether the position a player wants to place a stone is valid (is within the boundaries of the board).
      *
      * @param row    is the row of interest;
      * @param column is the column of interest;
-     * @return true if the combination of row and column does exist; otherwise, isValidPosition() returns false.
+     * @return true if the combination of row and column does exist on the board; otherwise, this returns false.
      */
     public boolean isValidPosition(int row, int column) {
         if (row >= 0 && row < SIZE && column >= 0 && column < SIZE) {
@@ -55,10 +55,6 @@ public class Board {
      * @return the Stone that is placed on that position; can be EMPTY as well if no stone is placed.
      */
     public Stone getStone(int row, int column) {
-        if (!isValidPosition(row, column)) {
-            return Stone.EMPTY;
-            //TODO check return? Of hoort deze check hier sowieso niet, maar in Game class?
-        }
         return board[row][column];
     }
 
@@ -70,10 +66,8 @@ public class Board {
      * @return true if the position is empty; if position is not valid OR result != Stone.EMPTY, return false.
      */
     public boolean isEmptyPosition(int row, int column) {
-        if (!isValidPosition(row, column)) {
-            return false; //TODO check return? Of hoort dit hier uberhaupt niet maar in Game class?
-        }
         if (getStone(row, column) != Stone.EMPTY) {
+            //TODO message misschien niet hier vermelden, want dan iedere keer bij removal ook melding.
             System.out.println("This position is already in use: the stone on this position is " + getStone(row, column) + ".");
             return false;
         }
@@ -105,8 +99,25 @@ public class Board {
      * @param stone  is the stone of interest.
      */
     public void placeStone(int row, int column, Stone stone) {
-        if (isValidPosition(row, column) && isEmptyPosition(row, column)) {
+        // First of all, the position should be valid (within the boundaries of the board). Furthermore, to be able to
+        // place a stone, this stone must be either BLACK or WHITE, and the position must be EMPTY.
+        if (isValidPosition(row, column) && stone != Stone.EMPTY && isEmptyPosition(row, column)) {
             board[row][column] = stone;
+        }
+    }
+
+    /**
+     * Removes a stone from a specific position (after checking if this position is valid and a stone is available on
+     * this position).
+     *
+     * @param row    is the row of interest
+     * @param column is the column of interest
+     */
+    public void removeStone(int row, int column) {
+        // First of all, the position should be valid (within the boundaries of the board). Furthermore, to be able to
+        // remove a stone, the position must NOT be EMPTY.
+        if (isValidPosition(row, column) && !isEmptyPosition(row, column)) {
+            board[row][column] = Stone.EMPTY;
         }
     }
 //    public void printBoard() { // can be deleted in the end; only check to see how/if it works as expected.
