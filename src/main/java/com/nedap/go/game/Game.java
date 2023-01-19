@@ -1,7 +1,8 @@
 package com.nedap.go.game;
 
-import java.util.HashMap;
-import java.util.Map;
+import javafx.geometry.Pos;
+
+import java.util.*;
 
 /**
  * Represents the GO game, including rules.
@@ -15,7 +16,7 @@ public class Game {
     private int passCount;
     private Position lastMoveBlack;
     private Position lastMoveWhite;
-    Map<Position, Stone> movesMap = new HashMap<>();
+
 
     /**
      * Creates a new game with two players and a board.
@@ -30,7 +31,7 @@ public class Game {
         this.board = board;
         // as Black always starts the game, this player is assigned to currentPlayer in the constructor
         currentPlayer = playerBlack;
-        // each game starts with a pass count of 0 (after two consecutive passes, the game is over).
+        // each game starts with a pass count of 0 (after two consecutive passes, the game is over)
         passCount = 0;
     }
 
@@ -43,6 +44,15 @@ public class Game {
         } else {
             currentPlayer = playerBlack;
         }
+    }
+
+    /**
+     * Get the board
+     *
+     * @return the board of the game
+     */
+    public Board getBoard() {
+        return board;
     }
 
     /**
@@ -74,51 +84,16 @@ public class Game {
     }
 
     /**
-     * Get the player whose turn it is.
+     * Get the player who is currently playing.
      *
-     * @param currentPlayer is the player that currently can make a move or pass
      * @return the player that can make a move or pass (either playerBlack or playerWhite)
      */
-    public Player getTurn(Player currentPlayer) {
-        return currentPlayer;
-    }
-
-    /**
-     * Create a map that stores all moves. In this map, all possible positions (combination of int row and int column)
-     * are shown and stored as keys (as each position is unique) and the values of these positions are the stones that
-     * are placed on this position (which can be EMPTY too). By the start of the game, all positions are EMPTY.
-     *
-     * @return a map with all positions of the board representing Stone.EMPTY.
-     */
-    public Map<Position, Stone> createMovesMap() {
-        for (int row = 0; row < board.SIZE; row++) {
-            for (int column = 0; column < board.SIZE; column++) {
-                Position position = new Position(row, column);
-                movesMap.put(position, Stone.EMPTY);
-            }
+    public Player getCurrentPlayer() {
+        if (currentPlayer == playerBlack) {
+            return playerBlack;
+        } else {
+            return playerWhite;
         }
-        return movesMap;
-    }
-
-    /**
-     * Update the map after placing or removing a stone on/from the board.
-     *
-     * @param row    is the row a stone is placed or removed
-     * @param column is the column a stone is placed or removed
-     * @param stone  is the stone that is placed (for placing a stone, this is either BLACK or WHITE; for removal,
-     *               this is EMPTY)
-     * @return an updated map that represents all positions with corresponding stones that are currently placed on the board
-     */
-    public Map<Position, Stone> updateMovesMap(int row, int column, Stone stone) {
-        // First, find the correct position corresponding to the row and column of input. When this position is found,
-        // the corresponding stone can be updated (from EMPTY to BLACK or WHITE after placing a stone, from BLACK or
-        // WHITE to EMPTY after removing a stone).
-        for (Position positions : movesMap.keySet()) {
-            if (positions.getRow() == row && positions.getColumn() == column) {
-                movesMap.put(positions, stone);
-            }
-        }
-        return movesMap;
     }
 
     /**
@@ -128,14 +103,7 @@ public class Game {
      * @param column is the column a player wants to place a stone
      * @return true if the move is valid or false if it is not valid
      */
-    public boolean isValidMove(int row, int column) { // check if position is EMPTY && lastMove != newMove && of positie op het board is.
-//        //TODO also check via MAP instead of BOARD!
-//        for (Position positions : movesMap.keySet()) {
-//            if (positions.getRow() == row && positions.getColumn() == column) {
-//                if (movesMap.get(positions).equals(Stone.EMPTY)) {
-//                    return false;
-//                }
-//            }
+    public boolean isValidMove(int row, int column) {
         // check if position is a valid position on the board
         if (!board.isValidPosition(row, column)) {
             return false;
@@ -159,33 +127,6 @@ public class Game {
     }
 
     /**
-     * Check whether a single stone is captured after making a move
-     *
-     * @return true if this stone is captured, false if it is not captured
-     */
-    public boolean isSingleStoneCaptured(int row, int column) {
-        // TODO: nu via BOARD, mogelijk ook via MAP checken --> wat is beter?!
-        //  Daarnaast: uitzonderingen voor als steen in op een rand / in de hoek geplaatst is!
-        if (board.getStone((row - 1), column) == getStoneOpponent(currentPlayer) &&
-                board.getStone((row + 1), column) == getStoneOpponent(currentPlayer) &&
-                board.getStone(row, (column - 1)) == getStoneOpponent(currentPlayer) &&
-                board.getStone(row, (column + 1)) == getStoneOpponent(currentPlayer)) {
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * Check whether or multiple stones are captured after making a move
-     *
-     * @return true if multiple stones are captured, false if they are not captured
-     */
-    public boolean areMultipleStonesCaptured() {
-        //TODO
-        return false;
-    }
-
-    /**
      * Execute the move when this move is found to be valid.
      *
      * @param row    is the row a player wants to place a stone
@@ -197,7 +138,7 @@ public class Game {
             // reset passCount if move is made
             passCount = 0;
             // update movesMap with the position and stone that are used in this move
-            updateMovesMap(row, column, getStone(currentPlayer));
+//            updateMovesMap(row, column, getStone(currentPlayer));
             // update lastMove of current player to this move, so that the check can be done on this move during the next turn
             if (getStone(currentPlayer) == Stone.BLACK) {
                 lastMoveBlack = new Position(row, column);
@@ -210,16 +151,38 @@ public class Game {
     }
 
     /**
+     * Get the positions of the neighbours of the placed stone.
+     *
+     * @param row    is the row a player has placed a stone
+     * @param column is the column a player has placed a stone
+     * @return a set of positions of the neighbours of the placed stone
+     */
+    public Set<Position> getNeighbourPositions(int row, int column) {
+        Set<Position> neighbourPositions = new HashSet<>();
+        if (row != 0) {
+            neighbourPositions.add(new Position((row - 1), column));
+        }
+        if (row != (board.SIZE - 1)) {
+            neighbourPositions.add(new Position((row + 1), column));
+        }
+        if (column != 0) {
+            neighbourPositions.add(new Position(row, (column - 1)));
+        }
+        if (column != (board.SIZE - 1)) {
+            neighbourPositions.add(new Position(row, (column + 1)));
+        }
+        return neighbourPositions;
+    }
+
+    /**
      * Remove stones from the board after capturing these stones.
      *
      * @param row    is the row the stone to be removed is positioned
      * @param column is the column the stone to be removed is positioned
      */
     public void removeStone(int row, int column) {
-        //   if (isCaptured()) {
         board.removeStone(row, column);
-        updateMovesMap(row, column, Stone.EMPTY);
-        //      }
+//            updateMovesMap(row, column, Stone.EMPTY);
     }
 
     /**
@@ -230,6 +193,15 @@ public class Game {
         passCount++;
         // the turn goes to the opponent without placing a stone
         switchTurn();
+    }
+
+    /**
+     * Get the passCounter (number of consecutive passes)
+     *
+     * @return the number of consecutive passes
+     */
+    public int getPassCount() {
+        return passCount;
     }
 
     /**
@@ -247,24 +219,35 @@ public class Game {
 
     public static void main(String[] args) {
         Game game = new Game(new Player("black", Stone.BLACK), new Player("white", Stone.WHITE), new Board());
-        game.createMovesMap();
-        game.doMove(0, 0);
-        System.out.println(game.movesMap);
-        game.doMove(1, 4);
-        game.removeStone(0, 0);
-        game.doMove(0, 0);
-        game.pass();
-        game.pass();
-        game.isGameOver();
+//        game.createMovesMap();
+//        game.doMove(0, 0);
+//        System.out.println(game.movesMap);
+//        game.doMove(1, 4);
+//        game.removeStone(0, 0);
+//        game.doMove(0, 0);
+//        game.pass();
+//        game.pass();
+//        game.isGameOver();
+        game.doMove(3, 3); // black
+        game.doMove(3, 4); // white
+        game.doMove(0, 0); // B
+        game.doMove(2, 3); // W
+        game.doMove(0, 1); // B
+        game.doMove(3, 2); // W
+        game.doMove(1, 0); // B
+        game.doMove(4, 3); // W
+        game.getBoard().printBoard();
+        //
     }
 
 
 // OK A move consists of placing one stone of a player their own color on an empty intersection on the board.
 // OK A player may pass their turn at any time.
-// A stone or solidly connected group of stones of one color is captured and removed from the board when all the intersections directly orthogonally adjacent to it are occupied by the opponent.
-// Self-capture/suicide is allowed (this is different from the commonly used rules).
+// OK A stone is captured and removed from the board when all the intersections directly orthogonally adjacent to it are occupied by the opponent.
+// A solidly connected group of stones of one color is captured and removed from the board when all the intersections directly orthogonally adjacent to it are occupied by the opponent.
+// OK Self-capture/suicide is allowed (this is different from the commonly used rules). = on each empty field a stone can be placed.
 // When a suicide move results in capturing a group, the group is removed from the board first and the suiciding stone stays alive.
-// No stone may be played so as to recreate any previous board position (ko rule https://en.wikipedia.org/wiki/Rules_of_go#Repetition).
+// OK No stone may be played so as to recreate any previous board position (ko rule https://en.wikipedia.org/wiki/Rules_of_go#Repetition).
 // OK Two consecutive passes will end the game.
 // A player's area consists of all the intersections the player has either occupied or surrounded.
 // The player with the biggest area wins. This way of scoring is called Area Scoring

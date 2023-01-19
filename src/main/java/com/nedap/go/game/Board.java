@@ -120,32 +120,32 @@ public class Board {
             board[row][column] = Stone.EMPTY;
         }
     }
-//    public void printBoard() { // can be deleted in the end; only check to see how/if it works as expected.
-//        // print the column numbers on top
-//        System.out.print("   ");
-//        for (int column = 0; column < SIZE; column++) {
-//            System.out.printf("%-3s", column);
-//        }
-//        System.out.println();
-//
-//        // print the row numbers on the left side.
-//        for (int row = 0; row < SIZE; row++) {
-//            System.out.printf("%-3s", row);
-//
-//            // print the state of the field.
-//            for (int column = 0; column < SIZE; column++) {
-//                if ((board[row][column]) == Stone.EMPTY) {
-//                    System.out.printf("%-2s", '.');
-//                } else if ((board[row][column]) == Stone.BLACK) {
-//                    System.out.printf("%-2s", 'B');
-//                } else {
-//                    System.out.printf("%-2s", 'W');
-//                }
-//                System.out.print(" ");
-//            }
-//            System.out.println();
-//        }
-//    }
+    public void printBoard() { // can be deleted in the end; only check to see how/if it works as expected.
+        // print the column numbers on top
+        System.out.print("   ");
+        for (int column = 0; column < SIZE; column++) {
+            System.out.printf("%-3s", column);
+        }
+        System.out.println();
+
+        // print the row numbers on the left side.
+        for (int row = 0; row < SIZE; row++) {
+            System.out.printf("%-3s", row);
+
+            // print the state of the field.
+            for (int column = 0; column < SIZE; column++) {
+                if ((board[row][column]) == Stone.EMPTY) {
+                    System.out.printf("%-2s", '.');
+                } else if ((board[row][column]) == Stone.BLACK) {
+                    System.out.printf("%-2s", 'B');
+                } else {
+                    System.out.printf("%-2s", 'W');
+                }
+                System.out.print(" ");
+            }
+            System.out.println();
+        }
+    }
 //    public static void main(String[] args) {
 //        Board board = new Board();
 //        board.printBoard();
