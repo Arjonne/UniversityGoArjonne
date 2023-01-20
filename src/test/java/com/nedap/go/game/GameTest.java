@@ -3,9 +3,6 @@ package com.nedap.go.game;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 public class GameTest {
@@ -13,7 +10,6 @@ public class GameTest {
     private Player playerBlack;
     private Player playerWhite;
     private Board board;
-//    Map<Position, Stone> movesMap = new HashMap<>();
 
 
     /**
@@ -63,16 +59,16 @@ public class GameTest {
      */
     @Test
     public void testDoMoveAndRemoveStone() {
-        game.doMove(0,0);
-        assertEquals(Stone.BLACK, board.getStone(0,0));
-        assertEquals(Stone.EMPTY, board.getStone(1,0));
-        game.doMove(1,0);
-        assertEquals(Stone.WHITE, board.getStone(1,0));
-        game.removeStone(0,0);
-        assertEquals(game.getBoard().getStone(0,0),Stone.EMPTY);
-        game.doMove(0,0);
+        game.doMove(0, 0);
+        assertEquals(Stone.BLACK, board.getStone(0, 0));
+        assertEquals(Stone.EMPTY, board.getStone(1, 0));
+        game.doMove(1, 0);
+        assertEquals(Stone.WHITE, board.getStone(1, 0));
+        game.removeStone(0, 0);
+        assertEquals(game.getBoard().getStone(0, 0), Stone.EMPTY);
+        game.doMove(0, 0);
         // Black stone cannot be placed on this position again after removing this stone (due to KO rule).
-        assertEquals(game.getBoard().getStone(0,0),Stone.EMPTY);
+        assertEquals(game.getBoard().getStone(0, 0), Stone.EMPTY);
         // no checks for placing a stone on a position out of boundaries of the board OR placing a BLACK/WHITE stone on
         // a non-empty position OR switchTurn() which is implemented in doMove as this has been checked by other tests before.
     }
@@ -84,7 +80,7 @@ public class GameTest {
     public void testPassAndPassCountAndGameOver() {
         game.pass();
         assertEquals(1, game.getPassCount());
-        game.doMove(1,0);
+        game.doMove(1, 0);
         assertEquals(0, game.getPassCount());
         game.pass();
         assertEquals(1, game.getPassCount());
@@ -94,57 +90,49 @@ public class GameTest {
         assertTrue(game.isGameOver());
     }
 
-    // does work, but not sure whether it is necessary to do...?
-//    /**
-//     * Test whether createMovesMap() does correctly create a map with all placed stones on the field. As the map is just
-//     * created, all fields are empty.
-//     */
-//    @Test
-//    public void testCreateMovesMap() {
-//        game.createMovesMap();
-//        // as all possible positions of the board are represented in this map, the size of this map must be board.SIZE*board.SIZE.
-//        assertEquals(game.movesMap.size(), board.SIZE * board.SIZE);
-//        // check whether all Stones for each position are set on EMPTY by default
-//        for (Position positions : game.movesMap.keySet()) {
-//            assertTrue(game.movesMap.containsValue(Stone.EMPTY));
-//        }
-//    }
-//
-//    /**
-//     * Test whether updateMovesMap() does correctly update the map after placing or removing a stone.
-//     */
-//    @Test
-//    public void testUpdateMovesMap() {
-//        game.createMovesMap();
-//        // first, confirm that position (row 0, column 0) is empty:
-//        for (Position positions : game.movesMap.keySet()) {
-//            if (positions.getRow() == 0 && positions.getColumn() == 0) {
-//                assertTrue(game.movesMap.containsValue(Stone.EMPTY));
-//            }
-//        }
-//        // current player, which is Black by default, plays a move on position row 0, column 0:
-//        game.doMove(0, 0);
-//        // find this position in the map again and confirm that the value (=stone) is BLACK instead of EMPTY now.
-//        for (Position positions : game.movesMap.keySet()) {
-//            if (positions.getRow() == 0 && positions.getColumn() == 0) {
-//                assertTrue(game.movesMap.containsValue(Stone.BLACK));
-//            }
-//            // try some random positions to see that those are still EMPTY:
-//            if (positions.getRow() == 1 && positions.getColumn() == 0) {
-//                assertTrue(game.movesMap.containsValue(Stone.EMPTY));
-//            }
-//            if (positions.getRow() == (board.SIZE - 1) && positions.getColumn() == (board.SIZE - 1)) {
-//                assertTrue(game.movesMap.containsValue(Stone.EMPTY));
-//            }
-//        }
-//    }
-
+    /**
+     * GameOver was tested with two consecutive passes before; in this test also the option of game over when a board
+     * is full is tested.
+     */
     @Test
-    public void testIsValidMove() {
-        //TODO implement + javaDoc
-
+    public void testGameOver() {
+        assertFalse(game.isGameOver());
+        // place black stones on all positions of the board:
+        for (int row = 0; row < Board.SIZE; row++) {
+            for (int column = 0; column < Board.SIZE; column++) {
+                board.placeStone(row, column, Stone.BLACK);
+            }
+        }
+        assertTrue(board.isFull());
+        assertTrue(game.isGameOver());
     }
 
+    /**
+     * Test whether getNeighbourPositions() does get the correct number of neighbours in several positions.
+     */
+    @Test
+    public void testGetNeighbourPositions() {
+        // at position (row 1, column 1), the number of neighbours should be 4
+        game.getNeighbourPositions(1, 1);
+        assertEquals(4, game.neighbourPositions.size());
+        // at position (row 0, column 0), the number of neighbours should be 2 as this position is located in the left upper corner
+        game.getNeighbourPositions(0, 0);
+        assertEquals(2, game.neighbourPositions.size());
+        // at position (row SIZE-1, column 1), the number of neighbours should be 3 as this position is located on the right edge of the board
+        game.getNeighbourPositions((Board.SIZE - 1), 1);
+        assertEquals(3, game.neighbourPositions.size());
+        // at position (row 1, column SIZE-1), the number of neighbours should be 3 as this position is located on the lower edge of the board
+        game.getNeighbourPositions(1, (Board.SIZE - 1));
+        assertEquals(3, game.neighbourPositions.size());
+    }
+
+    /**
+     * Test whether getNeighbourStones() does get the correct stones that are neighbours in several positions.
+     */
+    @Test
+    public void testGetNeighbourStones() {
+        //TODO
+    }
 }
 
 
