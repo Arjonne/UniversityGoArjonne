@@ -20,6 +20,25 @@ public class Board {
     }
 
     /**
+     * Creates a representation of the board of type String.
+     */
+    public String toString() {
+        String stringRepresentationOfBoard = "";
+        for (int row = 0; row < SIZE; row++) {
+            for (int column = 0; column < SIZE; column++) {
+                if ((board[row][column]) == Stone.EMPTY) {
+                    stringRepresentationOfBoard += ".";
+                } else if ((board[row][column]) == Stone.BLACK) {
+                    stringRepresentationOfBoard += "B";
+                } else {
+                    stringRepresentationOfBoard += "W";
+                }
+            }
+        }
+        return stringRepresentationOfBoard;
+    }
+
+    /**
      * Creates a copy of the current state of the board.
      */
     public Board copyBoard() {
@@ -120,6 +139,7 @@ public class Board {
             board[row][column] = Stone.EMPTY;
         }
     }
+
     public void printBoard() { // can be deleted in the end; only check to see how/if it works as expected.
         // print the column numbers on top
         System.out.print("   ");
