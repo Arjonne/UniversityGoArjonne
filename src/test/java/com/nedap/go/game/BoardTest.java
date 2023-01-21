@@ -38,8 +38,6 @@ public class BoardTest {
         assertEquals(Stone.EMPTY, board.getStone(0, 1));
         board.placeStone(0, 1, Stone.WHITE);
         assertEquals(Stone.WHITE, board.getStone(0, 1));
-        // no checks for placing a stone on a position out of boundaries of the board OR placing a BLACK/WHITE stone on
-        // a non-empty position as this has been checked by other tests before.
     }
 
     /**
@@ -47,10 +45,10 @@ public class BoardTest {
      */
     @Test
     public void testRemoveAndGetStone() {
-        board.placeStone(1,1,Stone.BLACK);
-        assertEquals(Stone.BLACK, board.getStone(1,1));
-        board.removeStone(1,1);
-        assertEquals(Stone.EMPTY, board.getStone(1,1));
+        board.placeStone(1, 1, Stone.BLACK);
+        assertEquals(Stone.BLACK, board.getStone(1, 1));
+        board.removeStone(1, 1);
+        assertEquals(Stone.EMPTY, board.getStone(1, 1));
     }
 
     /**
@@ -81,10 +79,12 @@ public class BoardTest {
         assertTrue(board.isEmptyPosition(3, 3));
         board.placeStone(3, 3, Stone.BLACK);
         assertFalse(board.isEmptyPosition(3, 3));
-        // no checks for checking the position that is out of boundaries of the board as this has been checked by
-        // other tests before.
     }
 
+    /**
+     * Test to check whether isFull() returns false if at least one position on the board is still EMPTY, and true if all positions
+     * are filled with either BLACK or WHITE stones.
+     */
     @Test
     public void testIsFull() {
         assertFalse(board.isFull());
@@ -95,5 +95,45 @@ public class BoardTest {
             }
         }
         assertTrue(board.isFull());
+        // after removing one stone from the board, isFull() should return false:
+        board.removeStone(4, 4);
+        assertFalse(board.isFull());
+    }
+
+    /**
+     * Test to check whether toString correctly
+     */
+    @Test
+    public void testToString() {
+        // the game starts with empty fields, so no B or W should be visible in the String representation of the board:
+        assertFalse(board.toString().contains("B"));
+        assertFalse(board.toString().contains("W"));
+        // after placing a black stone, this String representation should contain a B, but still no W:
+        board.placeStone(5,5,Stone.BLACK);
+        assertTrue(board.toString().contains("B"));
+        assertFalse(board.toString().contains("W"));
+        // after placing a white stone, this String representation should contain both a B and a W:
+        board.placeStone(5,6,Stone.WHITE);
+        assertTrue(board.toString().contains("B"));
+        assertTrue(board.toString().contains("W"));
+        // when the board is full, no . should be visible in the String representation anymore:
+        for (int row = 0; row < Board.SIZE; row++) {
+            for (int column = 0; column < Board.SIZE; column++) {
+                board.placeStone(row, column, Stone.BLACK);
+            }
+        }
+        assertFalse(board.toString().contains("."));
+    }
+
+    /**
+     * Test to see whether the board is correctly printed and represents the placed stones
+     */
+    @Test
+    public void testPrintBoard() {
+        board.printBoard();
+        board.placeStone(6, 6, Stone.BLACK);
+        board.printBoard();
+        board.placeStone(6, 7, Stone.WHITE);
+        board.printBoard();
     }
 }

@@ -20,25 +20,6 @@ public class Board {
     }
 
     /**
-     * Creates a representation of the board of type String.
-     */
-    public String toString() {
-        String stringRepresentationOfBoard = "";
-        for (int row = 0; row < SIZE; row++) {
-            for (int column = 0; column < SIZE; column++) {
-                if ((board[row][column]) == Stone.EMPTY) {
-                    stringRepresentationOfBoard += ".";
-                } else if ((board[row][column]) == Stone.BLACK) {
-                    stringRepresentationOfBoard += "B";
-                } else {
-                    stringRepresentationOfBoard += "W";
-                }
-            }
-        }
-        return stringRepresentationOfBoard;
-    }
-
-    /**
      * Creates a copy of the current state of the board.
      */
     public Board copyBoard() {
@@ -54,9 +35,9 @@ public class Board {
     /**
      * Checks whether the position a player wants to place a stone is valid (is within the boundaries of the board).
      *
-     * @param row    is the row of interest;
-     * @param column is the column of interest;
-     * @return true if the combination of row and column does exist on the board; otherwise, this returns false.
+     * @param row    is the row of interest
+     * @param column is the column of interest
+     * @return true if the combination of row and column does exist on the board; if not, return false
      */
     public boolean isValidPosition(int row, int column) {
         if (row >= 0 && row < SIZE && column >= 0 && column < SIZE) {
@@ -67,22 +48,22 @@ public class Board {
     }
 
     /**
-     * Gets the stone on a specific position.
+     * Gets the stone that is placed on a specific position.
      *
-     * @param row    is the row of interest;
-     * @param column is the column of interest;
-     * @return the Stone that is placed on that position; can be EMPTY as well if no stone is placed.
+     * @param row    is the row of interest
+     * @param column is the column of interest
+     * @return the Stone that is placed on that position; can be EMPTY as well if no stone is placed
      */
     public Stone getStone(int row, int column) {
         return board[row][column];
     }
 
     /**
-     * Checks whether the position is empty
+     * Checks whether the position is empty.
      *
-     * @param row    is the row of interest;
-     * @param column is the column of interest;
-     * @return true if the position is empty; if position is not valid OR result != Stone.EMPTY, return false.
+     * @param row    is the row of interest
+     * @param column is the column of interest
+     * @return true if the position is empty; if not, return false
      */
     public boolean isEmptyPosition(int row, int column) {
         if (getStone(row, column) != Stone.EMPTY) {
@@ -94,9 +75,9 @@ public class Board {
     }
 
     /**
-     * Check whether all positions on the board are filled with black and white stones.
+     * Checks whether all positions on the board are filled with black and/or white stones.
      *
-     * @return true if all positions are filled, false if one position is still empty.
+     * @return true if all positions are filled; if (at least) one position is still EMPTY, return false
      */
     public boolean isFull() {
         for (int row = 0; row < SIZE; row++) {
@@ -113,9 +94,9 @@ public class Board {
      * Places the stone of interest on a specific position (after checking if this position is valid and if this
      * position is empty).
      *
-     * @param row    is the row of interest;
-     * @param column is the column of interest;
-     * @param stone  is the stone of interest.
+     * @param row    is the row of interest
+     * @param column is the column of interest
+     * @param stone  is the stone to place
      */
     public void placeStone(int row, int column, Stone stone) {
         // First of all, the position should be valid (within the boundaries of the board). Furthermore, to be able to
@@ -138,6 +119,25 @@ public class Board {
         if (isValidPosition(row, column) && !isEmptyPosition(row, column)) {
             board[row][column] = Stone.EMPTY;
         }
+    }
+
+    /**
+     * Creates a representation of the board of type String.
+     */
+    public String toString() {
+        String stringRepresentationOfBoard = "";
+        for (int row = 0; row < SIZE; row++) {
+            for (int column = 0; column < SIZE; column++) {
+                if ((board[row][column]) == Stone.EMPTY) {
+                    stringRepresentationOfBoard += ".";
+                } else if ((board[row][column]) == Stone.BLACK) {
+                    stringRepresentationOfBoard += "B";
+                } else {
+                    stringRepresentationOfBoard += "W";
+                }
+            }
+        }
+        return stringRepresentationOfBoard;
     }
 
     public void printBoard() { // can be deleted in the end; only check to see how/if it works as expected.
@@ -166,21 +166,4 @@ public class Board {
             System.out.println();
         }
     }
-//    public static void main(String[] args) {
-//        Board board = new Board();
-//        board.printBoard();
-//        board.copyBoard();
-//        board.placeStone(3, 4, Stone.BLACK);
-//        board.placeStone(3, 1, Stone.WHITE);
-//        board.getStone(3, 4);
-//        board.placeStone(11, 3, Stone.WHITE);
-//        board.placeStone(3, 4, Stone.WHITE);
-//        board.printBoard();
-//        board.copyBoard();
-//        board.isEmptyPosition(11, 2);
-//        board.placeStone(14, 2, Stone.BLACK);
-//        board.getStone(11, 2);
-//        board.placeStone(0,0,Stone.BLACK);
-//        board.isBoardFull();
-//    }
 }
