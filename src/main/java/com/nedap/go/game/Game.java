@@ -1,7 +1,5 @@
 package com.nedap.go.game;
 
-import javafx.geometry.Pos;
-
 import java.util.*;
 
 /**
@@ -15,11 +13,6 @@ public class Game {
     private Player currentPlayer;
     private static int passCount; // probably static, but check if it works when game is finished!
     private List<String> listPreviousBoards;
-    Set<Position> neighbourPositions;
-    Set<Stone> neighbourStones;
-    Set<Position> setOfPositions;
-    Set<Position> setOfCheckedPositions;
-    private int score;
 
 
     /**
@@ -103,6 +96,19 @@ public class Game {
         }
     }
 
+    /**
+     * Gets the player who is the opponent of the current player.
+     *
+     * @return the player who is the opponent of the current player (either playerBlack or playerWhite)
+     */
+    public Player getOpponentPlayer() {
+        if (currentPlayer == playerBlack) {
+            return playerWhite;
+        } else {
+            return playerBlack;
+        }
+    }
+
     // as placeStone in Board class is used an uses exactly the same checks, it is probably not necessary to repeat here!
     // OR maybe it is, as the game will probably on the server-side and the game on the client side, so double-checking
     // might be necessary
@@ -153,7 +159,7 @@ public class Game {
         return false;
     }
 
-    // check captures (isCaputered and hasCaptured)
+// Methods needed to check whether placed stone is/has captured ((by) a group of) stones:
 
     /**
      * Gets a set with the positions of the neighbours of the placed stone.
@@ -163,7 +169,7 @@ public class Game {
      * @return a set of positions of the neighbours of the placed stone
      */
     public Set<Position> getNeighbourPositions(int row, int column) {
-        neighbourPositions = new HashSet<>();
+        Set<Position> neighbourPositions = new HashSet<>();
         if (row != 0) {
             neighbourPositions.add(new Position((row - 1), column));
         }
@@ -184,8 +190,8 @@ public class Game {
      *
      * @return the list of positions with stones of the opponent that are located on the neighbour positions
      */
-    public Set<Stone> getNeighbourStones() {
-        neighbourStones = new HashSet<>();
+    public Set<Stone> getNeighbourStones(Set<Position> neighbourPositions) {
+        Set<Stone> neighbourStones = new HashSet<>();
         for (Position neighbourPosition : neighbourPositions) {
             Stone neighbourStone = board.getStone(neighbourPosition.getRow(), neighbourPosition.getColumn());
             neighbourStones.add(neighbourStone);
@@ -198,7 +204,7 @@ public class Game {
      *
      * @return true if the placed stone has a neighbour of the opponent, false if not
      */
-    public boolean hasNeighbourStonesOfOpponent() {
+    public boolean hasOpponentNeighbourStones(Set<Stone> neighbourStones) {
         for (Stone neighbourStone : neighbourStones) {
             if (neighbourStone == getStoneOpponent(currentPlayer)) {
                 return true;
@@ -208,76 +214,29 @@ public class Game {
     }
 
     /**
-     * Checks whether the placed stone has a stone of the own player as neighbour.
-     *
-     * @return true if the placed stone has a neighbour of the own player, false if not
-     */
-    public boolean hasNeighbourStonesOfOwn() {
-        for (Stone neighbourStone : neighbourStones) {
-            if (neighbourStone == getStone(currentPlayer)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
      * Creates a set for each direct neighbour of the placed stone that contains a stone of the opponent, to be able
      * to check whether these neighbours are part of a group of stones, and to check whether this neighbour stone (or
-     * group of stones) is captured by placing this stone.
+     * group of stones) is captured by placing this stone. One set per direct opponent neighbour (to be able to check if
+     * each neighbour is (part of) a group) is placed in a set that stores these.
      */
-    public void createSetOfPositions() {
-        // if looking for stones of the opponent (for hasCaptured):
+    public Set<Set<Position>> createSetOfOpponentGroupPositionSets(Set<Position> neighbourPositions) {
+        Set<Set<Position>> opponentGroupPositionsPlacedStone = new HashSet<>();
         for (Position neighbourPosition : neighbourPositions) {
             if (board.getStone(neighbourPosition.getRow(), neighbourPosition.getColumn()) == getStoneOpponent(currentPlayer)) {
-                setOfPositions = new HashSet<>();
-                setOfPositions.add(neighbourPosition);
+                Set<Position> groupPositions = new HashSet<>();
+                groupPositions.add(neighbourPosition);
+                opponentGroupPositionsPlacedStone.add(groupPositions);
             }
         }
-    }
-
-    /**
-     * Creates a set of the placed stone, to be able to check whether this stone is part of a group of stones, and to
-     * check whether this stone (or group of stones) is captured by placing this stone.
-     *
-     * @param row    is the row a player has placed a stone
-     * @param column is the column a player has placed a stone
-     */
-    public void createSetOfPositions(int row, int column) {
-        // if looking for stones of the own player (for isCaptured):
-        setOfPositions = new HashSet<>();
-        setOfPositions.add(new Position(row, column));
-    }
-
-    /**
-     * Adds the position of the neighbour stone of the opponent to the set of stones that represents group of stones of
-     * the opponent.
-     */
-    public void addOpponentToSetOfPositions() {
-        for (Position neighbourPosition : neighbourPositions) {
-            if (board.getStone(neighbourPosition.getRow(), neighbourPosition.getColumn()) == getStoneOpponent(currentPlayer)) {
-                setOfPositions.add(neighbourPosition);
-            }
-        }
-    }
-
-    /**
-     * Adds the position of the neighbour stone of the own player to the set of stones that represents group of stones of
-     * the own player.
-     */
-    public void addOwnToSetOfPositions() {
-        for (Position neighbourPosition : neighbourPositions) {
-            if (board.getStone(neighbourPosition.getRow(), neighbourPosition.getColumn()) == getStone(currentPlayer)) {
-                setOfPositions.add(neighbourPosition);
-            }
-        }
+        return opponentGroupPositionsPlacedStone;
     }
 
     /**
      * Creates a new set to be able to keep track of the positions that are checked on the neighbour stones.
      */
-    public void createSetOfCheckedPositions() {
-        setOfCheckedPositions = new HashSet<>();
+    public Set<Position> createSetOfCheckedPositions() {
+        Set<Position> checkedPositions = new HashSet<>();
+        return checkedPositions;
     }
 
     /**
@@ -285,7 +244,7 @@ public class Game {
      *
      * @return true if the checked stone has an empty neighbour position, false if not
      */
-    public boolean hasEmptyNeighbours() {
+    public boolean hasEmptyNeighbours(Set<Stone> neighbourStones) {
         for (Stone neighbourStone : neighbourStones) {
             if (neighbourStone == Stone.EMPTY) {
                 return true;
@@ -299,7 +258,7 @@ public class Game {
      *
      * @return true if the checked stone only has stones of own player as neighbour, false if not
      */
-    public boolean hasOnlyNeighbourStonesOfOwn() {
+    public boolean hasOnlyOwnNeighbourStones(Set<Stone> neighbourStones) {
         for (Stone neighbourStone : neighbourStones) {
             if (neighbourStone != getStone(currentPlayer)) {
                 return false;
@@ -309,41 +268,29 @@ public class Game {
     }
 
     /**
-     * Checks whether the checked stone only has stones of opponent as neighbour.
-     *
-     * @return true if the checked stone only has stones of opponent as neighbour, false if not
-     */
-    public boolean hasOnlyNeighbourStonesOfOpponent() {
-        for (Stone neighbourStone : neighbourStones) {
-            if (neighbourStone != getStoneOpponent(currentPlayer)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    public void loopHasCaptured() {
-
-    }
-
-    /**
      * Checks whether the current player has captured a stone or group of stones of the opponent with this move.
      * 1.  Find the position of the direct neighbours of the placed stone;
      * 2.  Find the stones located on these neighbour positions;
-     * 3.  Check if at least 1 of the neighbour stones is of the opponent;
-     * 4.  Create a new set for each of the neighbour stones of the opponent;
-     * 5.  Create a new set for the checked stones (with locations of stones of the opponent);
-     * 6.  Go into the set created by 4. and check the neighbour positions of that stone;
-     * 7.  Find the stones that are located on these neighbour positions;
-     * 8.  Check if at least one of those neighbour stones is EMPTY --> no capture!
-     * 9.  Check if all neighbour stones are of own player --> has captured this single stone!
-     * 10.  Check if any of the neighbours is of the opponent; when this is the case, add the stone(s) to the list
-     * created in 4;
-     * 11. Add the currently checked position to the set created by 5;
-     * 12. Check whether the set with to checked stones has the same size as the set that represents all found stones
-     * on neighbour positions of the opponent;
-     * 13. --> if true, placed move has captured a group of stones! If not true, redo from 6 (loop through set);
-     * 14. Check if the set with checked stones now contains all sets as created in 4. If not, check this / these
+     * 3.  Check if at least 1 of the neighbour stones is of the opponent; if not, no stone of the opponent is captured
+     * by making this move;
+     * 4.  Create a new set for each of the neighbour stones of the opponent and store these in a new set;
+     * 5.  Create a new set to store the checked stones (with locations of stones of the opponent);
+     * 6.  Create a new queue for the stones that are of the opponent that need to be checked and add the direct
+     * neighbours of the opponent that should be checked;
+     * Start while-loop:
+     * 7.  Go into the queue created by 6. Get the first position that is stored in that queue and check the neighbour
+     * positions of that stone;
+     * 8.  Find the stones that are located on these neighbour positions;
+     * 9.  Check if at least one of those neighbour stones is EMPTY --> no capture!
+     * 10. Check if all neighbour stones are of own player --> has captured this single stone! Remove this stone;
+     * 11. Check if any of the neighbours is of the opponent; when this is the case, FIRST check if these stones are
+     * already in the queue with stones to check OR in the set with checked positions; if not: add the stone(s)
+     * to the queue with positions to check as created in 6;
+     * 12. Add the currently checked position to the set as created by 5;
+     * 13. Go back into the while loop; if the queue is not empty, redo from 7 up to here;
+     * 14. If the queue is empty, all neighbour stones are checked and these do not have any EMPTY neighbours: the
+     * set of checked positions represents the group that is captured and can be removed;
+     * 15. Check if the set with checked stones now contains all sets as created in 4. If not, check this / these
      * stone(s) too in the same way.
      *
      * @param row    is the row a player wants to place a stone
@@ -352,125 +299,191 @@ public class Game {
      */
     public boolean hasCaptured(int row, int column) {
         // 1.  Find the position of the direct neighbours of the placed stone;
-        getNeighbourPositions(row, column);
+        Set<Position> neighbourPositions = getNeighbourPositions(row, column);
         // 2.  Find the stones located on these neighbour positions;
-        getNeighbourStones();
-        // 3.  Check if at least 1 of the neighbour stones is of the opponent;
-        if (!hasNeighbourStonesOfOpponent()) {
+        Set<Stone> neighbourStones = getNeighbourStones(neighbourPositions);
+        // 3.  Check if at least 1 of the neighbour stones is of the opponent; if not, no stone of the opponent is captured
+        //      by making this move;
+        if (!hasOpponentNeighbourStones(neighbourStones)) {
             return false;
         }
-        // 4.  Create a new set for each of the neighbour stones of the opponent;
-        createSetOfPositions();
-        // 5.  Create a new set for the checked stones (with locations of stones of the opponent);
-        createSetOfCheckedPositions();
-
-        loopHasCaptured();
-
-        //TODO : HIER START RECURSIE! DUS VANAF HIER NIEUWE METHODE VAN AANMAKEN. ALS SIZE != SIZE, ZICHZELF WEER AANROEPEN!
-
-        // 6.  Go into the set created by 4. and check the neighbour positions of that stone;
-        for (Position position : setOfPositions) {
-            getNeighbourPositions(position.getRow(), position.getColumn());
-            // 7.  Find the stones that are located on these neighbour positions;
-            getNeighbourStones();
-            // 8.  Check if at least one of those neighbour stones is EMPTY --> no capture!
-            if (hasEmptyNeighbours()) {
+        // 4.  Create a new set for each of the neighbour stones of the opponent and store these in a new set;
+        Set<Set<Position>> opponentGroupPositionsPlacedStone = createSetOfOpponentGroupPositionSets(neighbourPositions);
+        // 5.  Create a new set to store the checked stones (with locations of stones of the opponent);
+        Set<Position> checkedPositions = createSetOfCheckedPositions();
+        // 6.  Create a new queue for the stones that are of the opponent that need to be checked and add the direct
+        //      neighbours of the opponent that should be checked;
+        Queue<Position> positionsToCheck = new LinkedList<>();
+        for (Position neighbourPosition : neighbourPositions) {
+            if (board.getStone(neighbourPosition.getRow(), neighbourPosition.getColumn()) == getStoneOpponent(currentPlayer)) {
+                // here, we are still checking the neighbour positions of the placed stone, so no additional checks on
+                // whether this position is already in the queue or is already checked is needed.
+                positionsToCheck.add(neighbourPosition);
+            }
+        }
+        // 7.  Go into the queue created by 6. Get the first position that is stored in that queue and check the neighbour
+        //      positions of that stone;
+        while (!positionsToCheck.isEmpty()) {
+            Position position = positionsToCheck.poll();
+            neighbourPositions = getNeighbourPositions(position.getRow(), position.getColumn());
+            // 8.  Find the stones that are located on these neighbour positions;
+            neighbourStones = getNeighbourStones(neighbourPositions);
+            // 9.  Check if at least one of those neighbour stones is EMPTY --> no capture!
+            if (hasEmptyNeighbours(neighbourStones)) {
                 return false;
             }
-            // 9.  Check if all neighbour stones are of own player --> has captured this single stone!
-            if (hasOnlyNeighbourStonesOfOwn()) {
+            // 10. Check if all neighbour stones are of own player --> has captured this single stone! Remove this stone;
+            if (hasOnlyOwnNeighbourStones(neighbourStones)) {
+                removeStone(position.getRow(), position.getColumn());
                 return true;
             }
-            // 10. Check if any of the neighbours is of the opponent; when this is the case, add the stone(s) to the list
-            //      created in 4;
-            if (hasNeighbourStonesOfOpponent()) {
-                addOpponentToSetOfPositions();
+            // 11. Check if any of the neighbours is of the opponent; when this is the case, FIRST check if these stones are
+            //      already in the queue with stones to check OR in the set with checked positions; if not: add the stone(s)
+            //      to the queue with positions to check as created in 6;
+            if (hasOpponentNeighbourStones(neighbourStones)) {
+                for (Position neighbourPosition : neighbourPositions) {
+                    if (board.getStone(neighbourPosition.getRow(), neighbourPosition.getColumn()) == getStoneOpponent(currentPlayer)) {
+                        if (!(checkedPositions.contains(neighbourPosition)) || (!(positionsToCheck.contains(neighbourPosition)))) {
+                            positionsToCheck.add(neighbourPosition);
+                            //TODO fixen
+                        }
+                    }
+                }
             }
-            // 11. Add the currently checked position to the set created by 5;
-            setOfCheckedPositions.add(position);
-            // 12. Check whether the set with to checked stones has the same size as the set that represents all found stones
-            //      on neighbour positions of the opponent;
-            // 13. --> if true, placed move has captured a group of stones! If not true, redo from 6 (loop through set);
-            if (setOfPositions.size() == setOfCheckedPositions.size()) {
-                return true;
+            // 12. Add the currently checked position to the set as created by 5;
+            checkedPositions.add(position);
+            // 13. Go back into the while loop; if the queue is not empty, redo from 7 up to here;
+        }
+        // 14. If the queue is empty, all neighbour stones are checked and these do not have any EMPTY neighbours: the
+        //      set of checked positions represents the group that is captured and can be removed;
+//        for (Set<Position> groupPositions: opponentGroupPositionsPlacedStone) {
+//            if (!checkedPositions.contains(groupPositions)) {
+        removeGroupOfStones(checkedPositions);
+        // 15. Check if the set with checked stones now contains all sets as created in 4. If not, check this / these
+        //      stone(s) too in the same way.
+        //TODO
+        return true;
+    }
+
+
+    // Methods needed to check whether placed stone is (part of a group that is) captured by making this move:
+
+    /**
+     * Checks whether the checked stone only has stones of opponent as neighbour.
+     *
+     * @return true if the checked stone only has stones of opponent as neighbour, false if not
+     */
+    public boolean hasOnlyNeighbourStonesOfOpponent(Set<Stone> neighbourStones) {
+        for (Stone neighbourStone : neighbourStones) {
+            if (neighbourStone != getStoneOpponent(currentPlayer)) {
+                return false;
             }
-
-            // EINDE RECUSION
-
-            // 14. Check if the set with checked stones now contains all sets as created in 4. If not, check this / these
-            //      stone(s) too in the same way.
-            //TODO
         }
         return true;
     }
 
     /**
+     * Checks whether the placed stone has a stone of the own player as neighbour.
+     *
+     * @return true if the placed stone has a neighbour of the own player, false if not
+     */
+    public boolean hasNeighbourStonesOfOwn(Set<Stone> neighbourStones) {
+        for (Stone neighbourStone : neighbourStones) {
+            if (neighbourStone == getStone(currentPlayer)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * Checks whether the current player has self-captured (suicide) a stone or group of stones with this move.
-     * 1.  Create a new set for each of the own stones and add current position to this set;
-     * 2.  Create a new set for the checked stones (with locations of stones of own player);
-     * 3.  Go into the set created by 1. and check the neighbour positions of that stone;
-     * 4.  Find the stones located on these neighbour positions;
+     * 1.  Create a new set for the checked stones (with locations of stones of own player);
+     * 2.  Create a new queue for the stones that are of the own player that need to be checked and add the currently
+     * placed stone that should be checked on neighbour stones;
+     * Start while-loop:
+     * 3.  Go into the queue created by 2. Get the first position that is stored in that queue and check the neighbour
+     * positions of that stone;
+     * 4.  Find the stones that are located on these neighbour positions;
      * 5.  Check if at least one of those neighbour stones is EMPTY --> no capture!
-     * 6.  Check if all neighbour stones are of opponent --> this single stone is captured!
-     * 7.  Check if any of the neighbours is of the own player; when this is the case, add the stone(s) to the list
-     * created in 1;
-     * 8.  Add the currently checked position to the set created by 2;
-     * 9.  Check whether the set with to checked stones has the same size as the set that represents all found stones
-     * on neighbour positions of own player;
-     * 10. --> if true, placed move is captured as a group of stones! If not true, redo from 3 (loop through set).
+     * 6.  Check if all neighbour stones are of opponent --> this single stone is captured! Remove this stone;
+     * 7.  Check if any of the neighbours is of the own player; when this is the case, FIRST check if these stones are
+     * already in the queue with stones to check OR in the set with checked positions; if not: add the stone(s)
+     * to the queue with positions to check as created in 2;
+     * 8.  Add the currently checked position to the set created by 1;
+     * 9.  Go back into the while loop; if the queue is not empty, redo from 3 up to here;
+     * 10. If the queue is empty, all neighbour stones are checked and these do not have any EMPTY neighbours: the
+     * set of checked positions represents the group that is captured and can be removed;
      *
      * @param row    is the row a player wants to place a stone
      * @param column is the column a player wants to place a stone
      * @return true if this move leads to a self-capture (suicide) with a single stone or group of stones, false if not
      */
     public boolean isCaptured(int row, int column) {
-        // 1.  Create a new set for each of the own stones and add current position to this set;
-        createSetOfPositions(row, column);
-        // 2.  Create a new set for the checked stones (with locations of stones of own player);
-        createSetOfCheckedPositions();
-
-        //TODO : HIER START RECURSIE! DUS VANAF HIER NIEUWE METHODE VAN AANMAKEN. ALS SIZE != SIZE, ZICHZELF WEER AANROEPEN!
-
-        // 3.  Go into the set created by 1. and check the neighbour positions of that stone;
-        for (Position position : setOfPositions) {
-            getNeighbourPositions(position.getRow(), position.getColumn());
-            // 4.  Find the stones located on these neighbour positions;
-            getNeighbourStones();
+        // 1.  Create a new set for the checked stones (with locations of stones of own player);
+        Set<Position> checkedPositions = createSetOfCheckedPositions();
+        // 2.  Create a new queue for the stones that are of the own player that need to be checked and add the currently
+        //      placed stone that should be checked;
+        Queue<Position> positionsToCheck = new LinkedList<>();
+        positionsToCheck.add(new Position(row, column));
+        // 3.  Go into the queue created by 2. Get the first position that is stored in that queue and check the neighbour
+        //      positions of that stone;
+        while (!positionsToCheck.isEmpty()) {
+            Position position = positionsToCheck.poll();
+            Set<Position> neighbourPositions = getNeighbourPositions(position.getRow(), position.getColumn());
+            // 4.  Find the stones that are located on these neighbour positions;
+            Set<Stone> neighbourStones = getNeighbourStones(neighbourPositions);
             // 5.  Check if at least one of those neighbour stones is EMPTY --> no capture!
-            if (hasEmptyNeighbours()) {
+            if (hasEmptyNeighbours(neighbourStones)) {
                 return false;
             }
-            // 6.  Check if all neighbour stones are of opponent --> this single stone is captured!
-            if (hasOnlyNeighbourStonesOfOpponent()) {
+            // 6.  Check if all neighbour stones are of opponent --> this single stone is captured! Remove this stone;
+            if (hasOnlyNeighbourStonesOfOpponent(neighbourStones)) {
+                removeStone(position.getRow(), position.getColumn());
                 return true;
             }
-            // 7.  Check if any of the neighbours is of the own player; when this is the case, add the stone(s) to the list
-            //      created in 1;
-            if (hasNeighbourStonesOfOwn()) {
-                addOwnToSetOfPositions();
+            // 7.  Check if any of the neighbours is of the own player; when this is the case, FIRST check if these stones are
+            //      already in the queue with stones to check OR in the set with checked positions; if not: add the stone(s)
+            //      to the queue with positions to check as created in 2;
+            if (hasNeighbourStonesOfOwn(neighbourStones)) {
+                for (Position neighbourPosition : neighbourPositions) {
+                    if (board.getStone(neighbourPosition.getRow(), neighbourPosition.getColumn()) == getStone(currentPlayer)) {
+                        if (!(checkedPositions.contains(neighbourPosition)) || (!(positionsToCheck.contains(neighbourPosition)))) {
+                            positionsToCheck.add(neighbourPosition);
+                            //TODO fixen
+                        }
+                    }
+                }
             }
-            // 8.  Add the currently checked position to the set created by 2;
-            setOfCheckedPositions.add(position);
-            // 9.  Check whether the set with to checked stones has the same size as the set that represents all found stones
-            // on neighbour positions of own player;
-            // 10. --> if true, placed move is captured as a group of stones! If not true, redo from 3 (loop through set).
-            if (setOfPositions.size() == setOfCheckedPositions.size()) {
-                return true;
-            }
+            // 8.  Add the currently checked position to the set created by 1;
+            checkedPositions.add(position);
+            // 9.  Go back into the while loop; if the queue is not empty, redo from 3 up to here;
         }
+        // 10. If the queue is empty, all neighbour stones are checked and these do not have any EMPTY neighbours: the
+        //      set of checked positions represents the group that is captured and can be removed;
+        removeGroupOfStones(checkedPositions);
         return true;
     }
 
     /**
-     * Removes stone(s) from the board after capturing this (group of) stone(s).
+     * Removes a single stone from the board (ko rule violation or capture of single stone).
      *
      * @param row    is the row the stone to be removed is positioned
      * @param column is the column the stone to be removed is positioned
      */
     public void removeStone(int row, int column) {
-        // not row/column input, but set input, loop through set and get position from this set and remove the stone
-        // on that position
         board.removeStone(row, column);
+    }
+
+    /**
+     * Removes the group of stones that is captured.
+     *
+     * @param checkedPositions is the set that contains all checked positions.
+     */
+    public void removeGroupOfStones(Set<Position> checkedPositions) {
+        for (Position position : checkedPositions) {
+            removeStone(position.getRow(), position.getColumn());
+        }
     }
 
     /**
@@ -483,23 +496,15 @@ public class Game {
     public void doMove(int row, int column) {
         if (isValidMove(row, column)) {
             board.placeStone(row, column, getStone(currentPlayer));
+            // hasCaptured checked before isCaptured, as a suicide move resulting in capturing a group is allowed:
+            hasCaptured(row, column);
+            isCaptured(row, column);
             // Check KO rule violation. If this rule is violated, the stone will be removed again and the player can try
             // a new move --> no switch turn.
             if (isKoRuleViolated(getBoard().toString())) {
                 board.removeStone(row, column);
                 System.out.println("This is not a valid move, try again.");// maybe to TUI, and recall doMove with other row/column input. OR pass!
             } else {
-                // hasCaptured checked before isCaptured, as a suicide move resulting in capturing a group is allowed
-                if (hasCaptured(row, column)) {
-                    for (Position position : setOfPositions) {
-                        removeStone(position.getRow(), position.getColumn());
-                    }
-                }
-                if (isCaptured(row, column)) {
-                    for (Position position : setOfPositions) {
-                        removeStone(position.getRow(), position.getColumn());
-                    }
-                }
                 // reset passCount if move is made
                 passCount = 0;
                 // after making a move, it is the turn of the opponent
@@ -547,7 +552,7 @@ public class Game {
      */
     public int finalScore(Player player) {
         // loop through board? Remove all white stones and then ....?
-        score = 0;
+        int score = 0;
         return score;
     }
 
@@ -579,21 +584,34 @@ public class Game {
 //        game.pass();
 //        game.isGameOver();
         // check capturing one stone:
-        game.doMove(3, 3); // black
+        game.doMove(1, 0); // B
+
         game.doMove(3, 4); // white
         game.doMove(0, 0); // B
         game.doMove(2, 3); // W
         game.doMove(0, 1); // B
         game.doMove(3, 2); // W
-        game.doMove(1, 0); // B
+        game.doMove(7, 7); // B
+
         game.getBoard().printBoard();
         game.doMove(4, 3); // W
         game.getBoard().printBoard();
-        game.doMove(7,7); // B
+        game.doMove(3, 3); // black --> self-capture of 1 stone, so KO rule violation!
+        game.getBoard().printBoard();
+        game.doMove(3, 7); // black
+
         game.doMove(1, 1); // W
-        game.doMove(7,8); // B
+        game.doMove(7, 8); // B
         game.doMove(2, 0); // W
         game.getBoard().printBoard();
+        game.doMove(7, 6); // B
+        game.getBoard().printBoard();
+
+        game.doMove(8, 7); // W
+        game.doMove(7, 5); // B
+        game.doMove(8, 8); // W
+        game.doMove(8, 5); // B
+        game.doMove(8, 6); // W
 
     }
 
