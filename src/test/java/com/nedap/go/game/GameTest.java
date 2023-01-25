@@ -137,7 +137,7 @@ public class GameTest {
         assertTrue(game.getNeighbourStones(game.getNeighbourPositions(1,1)).contains(Stone.EMPTY));
         assertFalse(game.getNeighbourStones(game.getNeighbourPositions(1,1)).contains(Stone.WHITE));
         assertFalse(game.getNeighbourStones(game.getNeighbourPositions(1,1)).contains(Stone.BLACK));
-        assertTrue(game.hasEmptyNeighbours(game.getNeighbourStones(game.getNeighbourPositions(1, 1))));
+        assertTrue(game.hasNeighbourThatEnsuresNoCapture(game.getNeighbourStones(game.getNeighbourPositions(1, 1)), Stone.EMPTY));
         assertFalse(game.hasNeighbourOfSameColor(game.getNeighbourStones(game.getNeighbourPositions(1,1)), Stone.BLACK));
 
         // after placing the second stone (which is WHITE) right next to the first stone, the placed stone should have
@@ -147,7 +147,7 @@ public class GameTest {
         assertTrue(game.getNeighbourStones(game.getNeighbourPositions(1,2)).contains(Stone.EMPTY));
         assertTrue(game.getNeighbourStones(game.getNeighbourPositions(1,2)).contains(Stone.BLACK));
         assertFalse(game.getNeighbourStones(game.getNeighbourPositions(1,2)).contains(Stone.WHITE));
-        assertTrue(game.hasEmptyNeighbours(game.getNeighbourStones(game.getNeighbourPositions(1, 2))));
+        assertTrue(game.hasNeighbourThatEnsuresNoCapture(game.getNeighbourStones(game.getNeighbourPositions(1, 2)), Stone.EMPTY));
         assertFalse(game.hasNeighbourOfSameColor(game.getNeighbourStones(game.getNeighbourPositions(1,2)), Stone.WHITE));
     }
 
