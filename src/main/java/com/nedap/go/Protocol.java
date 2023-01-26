@@ -25,25 +25,25 @@ public final class Protocol {
 
     // both sides
     public static final String MOVE = "MOVE"; // both in server and client side?  username played this move || username passed
+    public static final String ERROR = "ERROR";
 
     /**
      * Builds a new protocol message which instructs the server that you want to connect.
-     *
-     * @param serverDescription is the description of the server
+     * @param clientDescription is the description of the client
      * @return the description of the server in the correct format
      */
-    public static String helloMessage(String serverDescription) {
-        return HELLO + SEPARATOR + serverDescription;
+    public static String helloMessage(String clientDescription) {
+        return HELLO + SEPARATOR + clientDescription;
     }
 
     /**
      * Builds a new protocol message which instructs the client that the server wants to accept the connection.
      *
-     * @param clientDescription is the description of the client
+     * @param serverDescription is the description of the server
      * @return the description of the client in the correct format
      */
-    public static String welcomeMessage(String clientDescription) {
-        return WELCOME + SEPARATOR + clientDescription;
+    public static String welcomeMessage(String serverDescription) {
+        return WELCOME + SEPARATOR + serverDescription;
     }
 
     /**
@@ -173,5 +173,9 @@ public final class Protocol {
         } else {
             return GAMEOVER + SEPARATOR + VICTORY + SEPARATOR + usernameWinner;
         }
+    }
+
+    public static String error(String message) {
+        return ERROR + SEPARATOR + message;
     }
 }
