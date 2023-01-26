@@ -14,6 +14,14 @@ public class ClientHandler implements Runnable {
     private Server server;
     private PrintWriter printWriter;
     private BufferedReader input;
+    public static final String HELLO = "HELLO";
+    public static final String USERNAME = "USERNAME";
+    public static final String QUEUE = "QUEUE";
+    public static final String MOVE = "MOVE";
+    public static final String PASS = "PASS";
+    public static final String QUIT = "QUIT";
+    public static final String SEPARATOR = "~";
+
 
     /**
      * Creates a clientHandler to be able to handle the input from the client that is connected to the server.
@@ -37,7 +45,7 @@ public class ClientHandler implements Runnable {
     /**
      * Closes the clientHandler. To do so, first the client socket is closed, and both the printWriter and
      * bufferedReader are closed too to prevent leakage. Besides, the server removes this clientHandler from the
-     * queue of connected clients.
+     * list of connected clients.
      */
     public void close() {
         try {
@@ -51,32 +59,66 @@ public class ClientHandler implements Runnable {
     }
 
     /**
+     * Gets the string representation of the clientHandler.
+     *
+     * @return the clientHandler to string
+     */
+    public String getClientHandler() {
+        return this.toString();
+    }
+
+    /**
      * Runs this operation.
      */
     @Override
     public void run() {
-//        try {
-//            USERNAME = input.readLine();
-//        } catch (IOException e) {
-//            close();
-//            return;
-//        }
-//        while (!socket.isClosed()) {
-//            try {
-//                String line = input.readLine();
-//                if (line == null) {
-//                    close();
-//                    break;
-//                }
-//                if (line.contains("SAY~")) { // this is exactly what the server needs to do with the server commands!!!!
-//                    // add the actual methods (like handleChatMessage) to the server class!!!!! Look for it in Chat example.
-//                    String[] arrOfStr = line.split("~", 2);
-//                  //  server.handleChatMessage(this, arrOfStr[1]);
-//                }
-//            } catch (IOException e) {
-//                close();
-//                break;
-//            }
-//        }
+        while (!socket.isClosed()) {
+            try {
+                String line = input.readLine();
+                if (line == null) {
+                    close();
+                    break;
+                }
+                boolean quit = false;
+                while (!quit) {
+                    String[] split = line.split(SEPARATOR);
+                    String command = split[0];
+                    switch (command) {
+                        case HELLO:
+                          //  System.out.println("a");
+                            doWelcome();
+                            break;
+                        case USERNAME:
+//                    doOut(param);
+                            break;
+                        case QUEUE:
+//                    doRoom(param);
+                            break;
+                        case MOVE:
+//                    doActivate(param);
+                            break;
+                        case PASS:
+//                    doHelp();
+                            break;
+                        case QUIT:
+                            quit = true;
+                            break;
+                        default:
+                            System.out.println("The input is not correct.");
+                            break;
+                    }
+                }
+            } catch (IOException e) {
+                close();
+                break;
+            }
+        }
     }
+
+    public void doWelcome() {
+
+    }
+
+
 }
+
