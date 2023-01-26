@@ -1,13 +1,13 @@
 package com.nedap.go.client;
 
+import com.nedap.go.Protocol;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.Socket;
-import java.util.LinkedList;
-import java.util.Queue;
 
 /**
  * Represents the client for the GO game.
@@ -15,17 +15,33 @@ import java.util.Queue;
 public class Client implements Runnable {
     //TODO check what needs to be global and what is a local variable!
     private Socket socket;
-    private Queue<Listener> listeners = new LinkedList<>();
     private BufferedReader input;
     private PrintWriter writer;
 
-    //TODO find out why no constructor for Client class was used in Chat exercise?
+    public static final String SEPARATOR = "~";
+    public static final String WELCOME = "WELCOME";
+    public static final String USERNAMETAKEN = "USERNAMETAKEN";
+    public static final String JOINED = "JOINED";
+    public static final String NEWGAME = "NEWGAME";
+    public static final String GAMEOVER = "GAMEOVER";
+    public static final String DISCONNECT = "DISCONNECT";
+    public static final String VICTORY = "VICTORY";
+    public static final String YOURTURN = "YOURTURN";
+    public static final String INVALIDMOVE = "INVALIDMOVE";
+    public static final String MOVE = "MOVE"; // both in server and client side?  username played this move || username passed
+    public static final String ERROR = "ERROR";
+
+    /**
+     * Creates a new client via which a player can play the game.
+     */
+    public Client() {
+    }
 
     /**
      * Connects the client to the server.
      *
      * @param address is the network address of the server
-     * @param port    is the port number on which the server is accepting a connection
+     * @param port    is the port number on which the server is accepting a connection for the GO game
      * @return true if connection could be established, false if not
      */
     public boolean connect(InetAddress address, int port) {
@@ -56,26 +72,6 @@ public class Client implements Runnable {
         }
     }
 
-    //TODO look in Chat exercise how client commands are handled here.
-
-    /**
-     * Adds a listener for this client to the queue of listeners.
-     *
-     * @param listener is the listener to add
-     */
-    public void addListener(Listener listener) {
-        listeners.add(listener);
-    }
-
-    /**
-     * Removes a listener for this client from the queue of listeners.
-     *
-     * @param listener is the listener to remove
-     */
-    public void removeListener(Listener listener) {
-        listeners.remove(listener);
-    }
-
     /**
      * Runs this operation.
      */
@@ -100,4 +96,11 @@ public class Client implements Runnable {
             }
         }
     }
+
+    public void doHello(String clientID) {
+        String clientIdFormatted = Protocol.helloMessage(clientID);
+        writer.println(clientIdFormatted);
+    }
+
+
 }
