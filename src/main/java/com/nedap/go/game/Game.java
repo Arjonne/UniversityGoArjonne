@@ -1,7 +1,5 @@
 package com.nedap.go.game;
 
-import javafx.geometry.Pos;
-
 import java.util.*;
 
 /**
@@ -172,7 +170,6 @@ public class Game {
             return null;
         }
     }
-
 
 
     /**
@@ -432,6 +429,46 @@ public class Game {
     }
 
     /**
+     * Calculates the score based on captured positions by checking all empty positions on being captured by one player.
+     *
+     * @param emptyPositions is the set of empty positions that should be checked on whether it is captured by one of
+     *                       the players to be able to calculate the final score
+     * @param player         is the player whose score is being calculated
+     * @return the number of captured positions
+     */
+    public int scoreBasedOnCapturedPositions(Set<Position> emptyPositions, Player player) {
+        // create a new set to be able to store all empty positions that are captured by a player (use a set to prevent
+        // storing the same position twice).
+        Set<Position> positionsOfCaptures = new HashSet<>();
+
+        // create a new queue with all empty positions to be able to remove checked positions and prevent double-checking.
+        Queue<Position> emptyPositionsQueue = new LinkedList<>(emptyPositions);
+        // check all positions in the queue and check whether this position is captured, or part of a group of empty
+        // positions that is being captured by the player of interest.
+        while (!emptyPositionsQueue.isEmpty()) {
+            Position position = emptyPositionsQueue.poll();
+            Set<Position> positionsOfPossiblyCapturedGroup = new HashSet<>();
+            positionsOfPossiblyCapturedGroup.add(position);
+            Set<Position> checkedGroup = getCapturedGroup(positionsOfPossiblyCapturedGroup, getStoneOpponent(player));
+            // if the position is actually (part of a group that is) captured, this position is added to the set with
+            // captured positions. Besides that, the queue is checked on containing position(s) of the captured (group
+            // of) stone(s). If positions have overlap, these positions are removed from the queue to prevent
+            // double-checking:
+            if (!checkedGroup.isEmpty()) {
+                positionsOfCaptures.addAll(checkedGroup);
+                for (Position checkedPosition : checkedGroup) {
+                    if (emptyPositions.contains(checkedPosition)) {
+                        emptyPositions.remove(checkedPosition);
+                    }
+                }
+            }
+        }
+        // the final count of captures is equal to the number of positions that is stored in the set:
+        int countOfFinalCaptures = positionsOfCaptures.size();
+        return countOfFinalCaptures;
+    }
+
+    /**
      * Removes a single stone from the board (ko rule violation).
      *
      * @param row    is the row the stone to be removed is positioned
@@ -537,7 +574,7 @@ public class Game {
         char charLetter = getCharOfPlayer(player);
         for (int i = 0; i < stringRepresentationOfBoard.length(); i++) {
             if (stringRepresentationOfBoard.charAt(i) == charLetter) {
-      //      if (Character.isLetter(charLetter)) {
+                //      if (Character.isLetter(charLetter)) {
                 numberOfStones++;
             }
         }
@@ -551,7 +588,7 @@ public class Game {
      * @return the number of captured positions on the board
      */
     public int getFinalCapturedPositions(Player player) {
-        return getCapturedGroup(emptyPositions, getStoneOpponent(player)).size();
+        return scoreBasedOnCapturedPositions(emptyPositions, player);
     }
 
     /**
