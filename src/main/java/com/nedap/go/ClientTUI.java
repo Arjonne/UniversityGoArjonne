@@ -21,11 +21,8 @@ public class ClientTUI {
             Client client = new Client();
             if (client.connect(address, port)) {
                 client.doHello(client.toString());
+                client.run();
             }
-
-
-
-
         } catch (UnknownHostException e) {
             System.out.println("No IP address for the host could be found so connection is not established.");
         }

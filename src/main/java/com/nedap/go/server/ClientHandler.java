@@ -1,5 +1,7 @@
 package com.nedap.go.server;
 
+import com.nedap.go.Protocol;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -79,34 +81,37 @@ public class ClientHandler implements Runnable {
                     close();
                     break;
                 }
-                boolean quit = false;
-                while (!quit) {
-                    String[] split = line.split(SEPARATOR);
-                    String command = split[0];
-                    switch (command) {
-                        case HELLO:
-                          //  System.out.println("a");
-                            doWelcome();
-                            break;
-                        case USERNAME:
-//                    doOut(param);
-                            break;
-                        case QUEUE:
+                String[] split = line.split(SEPARATOR);
+                String command = split[0];
+                switch (command) {
+                    case HELLO:
+                        System.out.println(line);
+                        doWelcome(server.toString());
+                        break;
+                    case USERNAME:
+                        String username = split[1];
+                        if ((server.getListOfUsernames().contains(username))) {
+                            doUsernameTaken("This username is already used by another player; choose another username.");
+                        } else {
+                            System.out.println(line);
+                            server.addUsername(username);
+                            doJoined(username + ", you are successfully connected to the server.");
+                        }
+                        break;
+                    case QUEUE:
 //                    doRoom(param);
-                            break;
-                        case MOVE:
+                        break;
+                    case MOVE:
 //                    doActivate(param);
-                            break;
-                        case PASS:
+                        break;
+                    case PASS:
 //                    doHelp();
-                            break;
-                        case QUIT:
-                            quit = true;
-                            break;
-                        default:
-                            System.out.println("The input is not correct.");
-                            break;
-                    }
+                        break;
+                    case QUIT:
+                        break;
+                    default:
+                        System.out.println("The input is not correct.");
+                        break;
                 }
             } catch (IOException e) {
                 close();
@@ -115,10 +120,28 @@ public class ClientHandler implements Runnable {
         }
     }
 
-    public void doWelcome() {
-
+    public void doError(String message) {
+        String messageFormatted = Protocol.error(message);
+        printWriter.println(messageFormatted);
+        System.out.println(messageFormatted);
     }
 
+    public void doWelcome(String serverID) {
+        String serverIdFormatted = Protocol.welcomeMessage(serverID);
+        printWriter.println(serverIdFormatted);
+        System.out.println(serverIdFormatted);
+    }
 
+    public void doUsernameTaken(String message) {
+        String messageFormatted = Protocol.usernameTaken(message);
+        printWriter.println(messageFormatted);
+        System.out.println(messageFormatted);
+    }
+
+    public void doJoined(String message) {
+        String messageFormatted = Protocol.joined(message);
+        printWriter.println(messageFormatted);
+        System.out.println(messageFormatted);
+    }
 }
 

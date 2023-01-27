@@ -8,6 +8,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.util.Scanner;
 
 /**
  * Represents the client for the GO game.
@@ -85,6 +86,42 @@ public class Client implements Runnable {
                     // dat'ie geclosed is zodat client handmatig kan closen?
                     break;
                 }
+                Scanner scanner = new Scanner(System.in);
+                String[] split = line.split(SEPARATOR);
+                String command = split[0];
+                switch (command) {
+                    case WELCOME:
+                        System.out.println("Enter your username:");
+                        String username = scanner.nextLine();
+                        if (username.contains(SEPARATOR)) {
+                            System.out.println("Invalid username: it may not contain a ~.");
+                            doHello(this.toString());
+                        } else {
+                            doUsername(username);
+                        }
+                        break;
+                    case USERNAMETAKEN:
+                        System.out.println(split[1]);
+                        doHello(this.toString());
+                        break;
+                    case JOINED:
+                        System.out.println(split[1] + " You are now waiting for a second player to start a new game.");
+                        doQueue();
+                        break;
+                    case NEWGAME:
+                        break;
+                    case YOURTURN:
+                        break;
+                    case GAMEOVER:
+                        break;
+                    case ERROR:
+                        break;
+                }
+
+
+                //doHello(this.toString());
+
+
                 // this is how client commands are need to be handled!
 //                String[] messagesString = line.split("~", 3);
 //                for (Listener listener : listeners) {
@@ -97,10 +134,23 @@ public class Client implements Runnable {
         }
     }
 
-    public void doHello(String clientID) {
+    public synchronized void doHello(String clientID) {
         String clientIdFormatted = Protocol.helloMessage(clientID);
         writer.println(clientIdFormatted);
     }
 
+    public synchronized void doUsername(String username) {
+        String usernameFormatted = Protocol.username(username);
+        writer.println(usernameFormatted);
+    }
 
+    public synchronized void doQueue() {
+        String queueing = Protocol.queue();
+        writer.println(queueing);
+    }
 }
+
+
+
+
+

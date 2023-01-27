@@ -18,6 +18,7 @@ public class Server implements Runnable {
     private Thread socketThread;
     private boolean isOpen;
     private List<ClientHandler> handlers;
+    private List<String> usernames;
 
     /**
      * Creates the server to be able to play the game.
@@ -29,6 +30,8 @@ public class Server implements Runnable {
         this.port = port;
         // a new list is created that stores all clientsHandlers that are created to be able to communicate to clients:
         this.handlers = new ArrayList<>();
+        // a new list is created that stores all usernames to be able to avoid double use of the same username:
+        this.usernames = new ArrayList<>();
         // after creating this server, it is not opened yet:
         isOpen = false;
     }
@@ -151,5 +154,32 @@ public class Server implements Runnable {
      */
     public synchronized void removeClient(ClientHandler clientHandler) {
         handlers.remove(clientHandler);
+    }
+
+    /**
+     * Gets the list of all usernames that are currently in use.
+     *
+     * @return the list of all usernames
+     */
+    public synchronized List<String> getListOfUsernames() {
+        return usernames;
+    }
+
+    /**
+     * Adds the username of a newly connected client to the list of connected clients (players).
+     *
+     * @param username is the username this client (player) uses
+     */
+    public synchronized void addUsername(String username) {
+        usernames.add(username);
+    }
+
+    /**
+     * Removes the username from the list of connected clients when the connection with this Client is closed.
+     *
+     * @param username is the username of client that has ended the connection
+     */
+    public synchronized void removeUsername(String username) {
+        usernames.remove(username);
     }
 }
