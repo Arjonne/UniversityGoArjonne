@@ -1,12 +1,19 @@
 package com.nedap.go.server;
 
 import com.nedap.go.Protocol;
+import com.nedap.go.client.Client;
+import com.nedap.go.game.Board;
+import com.nedap.go.game.Game;
+import com.nedap.go.game.Player;
+import com.nedap.go.game.Stone;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Represents a clientHandler for the server for the GO game.
@@ -16,6 +23,7 @@ public class ClientHandler implements Runnable {
     private Server server;
     private PrintWriter printWriter;
     private BufferedReader input;
+    private String usernameStored;
     public static final String HELLO = "HELLO";
     public static final String USERNAME = "USERNAME";
     public static final String QUEUE = "QUEUE";
@@ -61,19 +69,11 @@ public class ClientHandler implements Runnable {
     }
 
     /**
-     * Gets the string representation of the clientHandler.
-     *
-     * @return the clientHandler to string
-     */
-    public String getClientHandler() {
-        return this.toString();
-    }
-
-    /**
      * Runs this operation.
      */
     @Override
     public void run() {
+        int queueCount = 0;
         while (!socket.isClosed()) {
             try {
                 String line = input.readLine();
@@ -86,7 +86,7 @@ public class ClientHandler implements Runnable {
                 switch (command) {
                     case HELLO:
                         System.out.println(line);
-                        doWelcome(server.toString());
+                        doWelcome("Server by Arjonne");
                         break;
                     case USERNAME:
                         String username = split[1];
@@ -95,11 +95,19 @@ public class ClientHandler implements Runnable {
                         } else {
                             System.out.println(line);
                             server.addUsername(username);
-                            doJoined(username + ", you are successfully connected to the server.");
+                            doJoined(username + " has successfully connected to the server.");
+                            saveUsername(username);
                         }
                         break;
                     case QUEUE:
-//                    doRoom(param);
+                        queueCount++;
+                        if (queueCount % 2 != 0) {
+                            server.addToQueue(this);
+                            doNewGame();
+                        } else {
+                            doJoined(getUsername() + " has left the queue.");
+                            server.removeFromQueue(this);
+                        }
                         break;
                     case MOVE:
 //                    doActivate(param);
@@ -118,6 +126,7 @@ public class ClientHandler implements Runnable {
                 break;
             }
         }
+
     }
 
     public void doError(String message) {
@@ -142,6 +151,35 @@ public class ClientHandler implements Runnable {
         String messageFormatted = Protocol.joined(message);
         printWriter.println(messageFormatted);
         System.out.println(messageFormatted);
+    }
+
+    public void saveUsername(String username) {
+        usernameStored = username;
+    }
+
+    public String getUsername() {
+        return usernameStored;
+    }
+
+    public void doNewGame() {
+        if (server.getWaitingQueue().size() < 2) {
+            System.out.println(getUsername() + " has successfully entered the queue. Waiting for a second player....");
+        } else {
+            List<ClientHandler> clientHandlerList = new ArrayList<>();
+            clientHandlerList.add(server.getWaitingQueue().poll());
+            clientHandlerList.add(server.getWaitingQueue().poll());
+            String username1 = clientHandlerList.get(0).getUsername();
+            String username2 = clientHandlerList.get(1).getUsername();
+            String messageFormatted = Protocol.newGame(username1, username2);
+            System.out.println(messageFormatted);
+            for (ClientHandler handlers : clientHandlerList) {
+                handlers.printWriter.println(messageFormatted);
+            }
+            Player playerBlack = new Player(username1, Stone.BLACK);
+            Player playerWhite = new Player(username2, Stone.WHITE);
+            Board board = new Board();
+            Game game = new Game(playerBlack, playerWhite, board);
+        }
     }
 }
 

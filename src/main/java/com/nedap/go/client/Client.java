@@ -105,10 +105,20 @@ public class Client implements Runnable {
                         doHello(this.toString());
                         break;
                     case JOINED:
-                        System.out.println(split[1] + " You are now waiting for a second player to start a new game.");
-                        doQueue();
+                        System.out.println(split[1]);
+                        System.out.println("Do you want to enter the queue and wait for a second player to play GO? Type YES for entering the queue.");
+                        if (scanner.nextLine().toUpperCase().equals("YES")) {
+                            doQueue();
+                            System.out.println("You have successfully entered the queue. Waiting for a second player....");
+                            System.out.println("If you want to leave the queue, type YES again.");
+                            if (scanner.nextLine().toUpperCase().equals("YES")) {
+                                doQueue();
+                            }
+                        }
                         break;
                     case NEWGAME:
+                        System.out.println("A new game is started. " + split[1] + " is playing against " + split[2] + ".");
+                        System.out.println(split[1] + " is BLACK, " + split[2] + " is WHITE.");
                         break;
                     case YOURTURN:
                         break;

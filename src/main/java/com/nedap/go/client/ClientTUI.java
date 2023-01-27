@@ -1,4 +1,4 @@
-package com.nedap.go;
+package com.nedap.go.client;
 
 import com.nedap.go.client.Client;
 
@@ -20,7 +20,7 @@ public class ClientTUI {
             int port = scanner.nextInt();
             Client client = new Client();
             if (client.connect(address, port)) {
-                client.doHello(client.toString());
+                client.doHello("Client by Arjonne");
                 client.run();
             }
         } catch (UnknownHostException e) {

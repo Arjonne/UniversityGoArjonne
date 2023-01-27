@@ -6,7 +6,9 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 
 /**
  * Represents the server for the GO game.
@@ -19,6 +21,7 @@ public class Server implements Runnable {
     private boolean isOpen;
     private List<ClientHandler> handlers;
     private List<String> usernames;
+    private Queue<ClientHandler> waitingQueue;
 
     /**
      * Creates the server to be able to play the game.
@@ -32,6 +35,8 @@ public class Server implements Runnable {
         this.handlers = new ArrayList<>();
         // a new list is created that stores all usernames to be able to avoid double use of the same username:
         this.usernames = new ArrayList<>();
+        // a queue is created in which clients (players) who want to play Go can wait until a second player is available:
+        this.waitingQueue = new LinkedList<>();
         // after creating this server, it is not opened yet:
         isOpen = false;
     }
@@ -182,4 +187,32 @@ public class Server implements Runnable {
     public synchronized void removeUsername(String username) {
         usernames.remove(username);
     }
+
+    /**
+     * Gets the queue in which clients are waiting to play a GO game.
+     *
+     * @return the queue with waiting clients for playing a GO game.
+     */
+    public Queue<ClientHandler> getWaitingQueue() {
+        return waitingQueue;
+    }
+
+    /**
+     * Adds the client to the queue to wait for another client to be able to play a GO game.
+     *
+     * @param clientHandler is the clientHandler of the client that enters the queue
+     */
+    public synchronized void addToQueue(ClientHandler clientHandler) {
+        waitingQueue.add(clientHandler);
+    }
+
+    /**
+     * Removes the client from the queue to wait for another client to be able to play a GO game.
+     *
+     * @param clientHandler is the clientHandler of the client that leaves the queue
+     */
+    public synchronized void removeFromQueue(ClientHandler clientHandler) {
+        waitingQueue.remove(clientHandler);
+    }
+
 }
