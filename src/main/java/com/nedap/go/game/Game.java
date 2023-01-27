@@ -118,6 +118,64 @@ public class Game {
     }
 
     /**
+     * Gets the set with all positions on which no stone is placed.
+     *
+     * @return the complete set with empty positions
+     */
+    public Set<Position> getEmptyPositions() {
+        return emptyPositions;
+    }
+
+    /**
+     * Gets a list of valid position based on random empty positions on the board that do not violate the ko rule.
+     *
+     * @param player is the player of interest
+     * @return the list of valid positions
+     */
+    public List<Position> getListOfValidPositions(Player player) {
+        // First, get the set of empty positions:
+        Set<Position> setOfEmptyPositions = getEmptyPositions();
+        // Create a new list to be able to store the valid positions. Use a list, so that it is possible to get a
+        // random index of that list and place a stone on the position that is stored on that random index:
+        List<Position> listOfValidPositions = new ArrayList<>();
+        // loop through all positions as stored in the set of empty positions, place a stone on each position on a copy
+        // of the board to be able to check whether this move is a valid move (stone placed on an empty position, on a
+        // position that actually exists on the board and whether the ko rule is not violated by placing this stone).
+        // If the move is a valid move, add the position to the list of valid positions.
+        for (Position position : setOfEmptyPositions) {
+            Board copyBoard = getBoard().copyBoard();
+            copyBoard.placeStone(position.getRow(), position.getColumn(), player.getStone());
+            if (isValidMove(position.getRow(), position.getColumn())) {
+                listOfValidPositions.add(position);
+            }
+        }
+        return listOfValidPositions;
+    }
+
+
+    /**
+     * Finds a valid position based on a random empty position on the board that does not violate the ko rule.
+     *
+     * @return the position of the random valid move
+     */
+    public Position findRandomValidPosition() {
+        // to be able to find a random valid position, the game must not be over yet, and the list of valid positions
+        // must not be empty.
+        if (!isGameOver() && !getListOfValidPositions(getCurrentPlayer()).isEmpty()) {
+            List<Position> listOfValidPositions = getListOfValidPositions(getCurrentPlayer());
+            // to be able to make a random move (on a random valid position), get a random index of the list with
+            // valid positions and get the position that is stored on that index.
+            int randomValidIndex = (int) (Math.random() * listOfValidPositions.size());
+            Position randomValidPosition = listOfValidPositions.get(randomValidIndex);
+            return randomValidPosition;
+        } else {
+            return null;
+        }
+    }
+
+
+
+    /**
      * Checks whether the move a player wants to make, is a valid move (whether te stone is placed on an existing
      * position and whether this stone is placed on an empty position).
      *
@@ -478,7 +536,8 @@ public class Game {
         int numberOfStones = 0;
         char charLetter = getCharOfPlayer(player);
         for (int i = 0; i < stringRepresentationOfBoard.length(); i++) {
-            if (Character.isLetter(charLetter)) {
+            if (stringRepresentationOfBoard.charAt(i) == charLetter) {
+      //      if (Character.isLetter(charLetter)) {
                 numberOfStones++;
             }
         }
@@ -493,8 +552,6 @@ public class Game {
      */
     public int getFinalCapturedPositions(Player player) {
         return getCapturedGroup(emptyPositions, getStoneOpponent(player)).size();
-        // TODO zorgen dat er niet alleen bij EMPTY uit de loop gegaan wordt in getCapturedGroup, maar fix dit ook voor
-        //  BLACK in het geval van empty spots checken op witte stenen en andersom voor deze puntentelling.
     }
 
     /**

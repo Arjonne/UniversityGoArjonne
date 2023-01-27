@@ -54,6 +54,56 @@ public class GameTest {
     }
 
     /**
+     * Test to check a move on being a valid move (placed within the boundaries of the board, on an empty position
+     * and not resulting in ko rule violation).
+     */
+    @Test
+    public void testValidMove() {
+        // stone placed outside board boundaries:
+        assertFalse(game.isValidMove(1, Board.SIZE));
+        // after placing a move on position (1,1), no second stone can be placed here:
+        game.doMove(1, 1);
+        assertFalse(game.isValidMove(1, 1));
+
+        // after removing the stone on position (1,1) and switching the turn (as then again BLACK can make the move),
+        // the ko rule is violated when again a stone on position (1,1) will be placed.
+        game.removeStone(1, 1);
+        game.switchTurn();
+        assertFalse(game.isValidMove(1, 1));
+    }
+
+    @Test
+    public void testFindRandomValidPositions() {
+        // on an empty board, all positions should be valid positions, so both the size of the list of empty positions
+        // and the size of the list of valid positions must be (board.SIZE * board.SIZE)
+        game.createEmptyPositionSet();
+        assertTrue((game.getEmptyPositions().size() == (board.SIZE * board.SIZE)));
+        assertTrue((game.getListOfValidPositions(game.getCurrentPlayer())).size() == (board.SIZE * board.SIZE));
+
+        // after placing a stone on the board, the size of the list of empty positions and the size of list of valid
+        // positions must be ((board.SIZE * board.SIZE) -1)
+        game.doMove(2, 2);
+        assertTrue((game.getEmptyPositions().size() == ((board.SIZE * board.SIZE) - 1)));
+        assertTrue((game.getListOfValidPositions(game.getCurrentPlayer())).size() == ((board.SIZE * board.SIZE) - 1));
+
+        // after removing the previously placed stone from the board, the list of empty positions and the size of the
+        // list of valid positions mus be (board.SIZE * board.SIZE) again.
+        game.removeStone(2,2);
+        // (manually adding this position to the set of empty positions again, as removal only occurs after capture in
+        // the game class!)
+        game.getEmptyPositions().add(new Position (2,2));
+        assertTrue((game.getEmptyPositions().size() == (board.SIZE * board.SIZE)));
+        assertTrue((game.getListOfValidPositions(game.getCurrentPlayer())).size() == (board.SIZE * board.SIZE));
+
+        // after switching the turn, the list of empty positions should still be (board.SIZE * board.SIZE), but the
+        // size of the list of valid positions should be ((board.SIZE * board.SIZE) -1) again, as doing the move (2,2)
+        // would result in ko rule violation!
+        game.switchTurn();
+        assertTrue((game.getEmptyPositions().size() == (board.SIZE * board.SIZE)));
+        assertTrue((game.getListOfValidPositions(game.getCurrentPlayer())).size() == ((board.SIZE * board.SIZE) - 1));
+    }
+
+    /**
      * Test to check whether a stone can be placed on a position using doMove() and to check if the correct stone is
      * returned when using getStone().
      */
@@ -114,10 +164,10 @@ public class GameTest {
     public void testGetNeighbourPositions() {
         // at position (row 1, column 1), the number of neighbours should be 4
         game.getNeighbourPositions(1, 1);
-        assertEquals(4, game.getNeighbourPositions(1,1).size());
+        assertEquals(4, game.getNeighbourPositions(1, 1).size());
         // at position (row 0, column 0), the number of neighbours should be 2 as this position is located in the left upper corner
         game.getNeighbourPositions(0, 0);
-        assertEquals(2, game.getNeighbourPositions(0,0).size());
+        assertEquals(2, game.getNeighbourPositions(0, 0).size());
         // at position (row SIZE-1, column 1), the number of neighbours should be 3 as this position is located on the right edge of the board
         game.getNeighbourPositions((Board.SIZE - 1), 1);
         assertEquals(3, game.getNeighbourPositions((Board.SIZE - 1), 1).size());
@@ -132,93 +182,101 @@ public class GameTest {
     @Test
     public void testGetNeighbourStones() {
         // after placing the first stone (which is BLACK), all neighbours should be EMPTY:
-        board.placeStone(1,1, Stone.BLACK);
-        game.getNeighbourStones(game.getNeighbourPositions(1,1));
-        assertTrue(game.getNeighbourStones(game.getNeighbourPositions(1,1)).contains(Stone.EMPTY));
-        assertFalse(game.getNeighbourStones(game.getNeighbourPositions(1,1)).contains(Stone.WHITE));
-        assertFalse(game.getNeighbourStones(game.getNeighbourPositions(1,1)).contains(Stone.BLACK));
+        board.placeStone(1, 1, Stone.BLACK);
+        game.getNeighbourStones(game.getNeighbourPositions(1, 1));
+        assertTrue(game.getNeighbourStones(game.getNeighbourPositions(1, 1)).contains(Stone.EMPTY));
+        assertFalse(game.getNeighbourStones(game.getNeighbourPositions(1, 1)).contains(Stone.WHITE));
+        assertFalse(game.getNeighbourStones(game.getNeighbourPositions(1, 1)).contains(Stone.BLACK));
         assertTrue(game.hasNeighbourThatEnsuresNoCapture(game.getNeighbourStones(game.getNeighbourPositions(1, 1)), Stone.EMPTY));
-        assertFalse(game.hasNeighbourOfSameColor(game.getNeighbourStones(game.getNeighbourPositions(1,1)), Stone.BLACK));
+        assertFalse(game.hasNeighbourOfSameColor(game.getNeighbourStones(game.getNeighbourPositions(1, 1)), Stone.BLACK));
 
         // after placing the second stone (which is WHITE) right next to the first stone, the placed stone should have
         // a BLACK stone as neighbour:
         board.placeStone(1, 2, Stone.WHITE);
-        game.getNeighbourStones(game.getNeighbourPositions(1,2));
-        assertTrue(game.getNeighbourStones(game.getNeighbourPositions(1,2)).contains(Stone.EMPTY));
-        assertTrue(game.getNeighbourStones(game.getNeighbourPositions(1,2)).contains(Stone.BLACK));
-        assertFalse(game.getNeighbourStones(game.getNeighbourPositions(1,2)).contains(Stone.WHITE));
+        game.getNeighbourStones(game.getNeighbourPositions(1, 2));
+        assertTrue(game.getNeighbourStones(game.getNeighbourPositions(1, 2)).contains(Stone.EMPTY));
+        assertTrue(game.getNeighbourStones(game.getNeighbourPositions(1, 2)).contains(Stone.BLACK));
+        assertFalse(game.getNeighbourStones(game.getNeighbourPositions(1, 2)).contains(Stone.WHITE));
         assertTrue(game.hasNeighbourThatEnsuresNoCapture(game.getNeighbourStones(game.getNeighbourPositions(1, 2)), Stone.EMPTY));
-        assertFalse(game.hasNeighbourOfSameColor(game.getNeighbourStones(game.getNeighbourPositions(1,2)), Stone.WHITE));
+        assertFalse(game.hasNeighbourOfSameColor(game.getNeighbourStones(game.getNeighbourPositions(1, 2)), Stone.WHITE));
     }
 
     @Test
     public void testCaptures() {
+        game.createEmptyPositionSet();
+
         // test capturing a group of stones:
-        game.doMove(0,0); // BLACK
-        game.doMove(0,2); // WHITE
-        game.doMove(0,1); // BLACK
-        game.doMove(1,1); // WHITE
-        game.doMove(1,0); // BLACK
+        game.doMove(0, 0); // BLACK
+        game.doMove(0, 2); // WHITE
+        game.doMove(0, 1); // BLACK
+        game.doMove(1, 1); // WHITE
+        game.doMove(1, 0); // BLACK
         // next move captures 3 black stones, so positions (0,0), (0,1) and (1,0) should be empty afterwards:
-        game.doMove(2,0); // WHITE
-        assertTrue(board.isEmptyPosition(0,0));
-        assertTrue(board.isEmptyPosition(1,0));
-        assertTrue(board.isEmptyPosition(0,1));
+        game.doMove(2, 0); // WHITE
+        assertTrue(board.isEmptyPosition(0, 0));
+        assertTrue(board.isEmptyPosition(1, 0));
+        assertTrue(board.isEmptyPosition(0, 1));
 
         // test suicide move:
-        game.doMove(6,8); // BLACK
-        game.doMove(5,8); // WHITE
-        game.doMove(4,0); // BLACK
-        game.doMove(5,7); // WHITE
-        game.doMove(5,0); // BLACK
-        game.doMove(6,6); // WHITE
-        game.doMove(3,1); // BLACK
-        game.doMove(7,8); // WHITE
-        game.doMove(4,2); // BLACK
-        game.doMove(7,7); // WHITE
+        game.doMove(6, 8); // BLACK
+        game.doMove(5, 8); // WHITE
+        game.doMove(4, 0); // BLACK
+        game.doMove(5, 7); // WHITE
+        game.doMove(5, 0); // BLACK
+        game.doMove(6, 6); // WHITE
+        game.doMove(3, 1); // BLACK
+        game.doMove(7, 8); // WHITE
+        game.doMove(4, 2); // BLACK
+        game.doMove(7, 7); // WHITE
         // next move is suicide move of black, so positions (6,7) and (6,8) should be empty afterwards:
-        game.doMove(6,7); // BLACK
-        assertTrue(board.isEmptyPosition(6,7));
-        assertTrue(board.isEmptyPosition(6,8));
+        game.doMove(6, 7); // BLACK
+        assertTrue(board.isEmptyPosition(6, 7));
+        assertTrue(board.isEmptyPosition(6, 8));
 
         // test whether suicide move resulting in capture removes the correct stone:
-        game.doMove(4,1); // WHITE
-        game.doMove(5,2); // BLACK
-        game.doMove(5,1); // WHITE
-        game.doMove(2,4); // BLACK
-        game.doMove(6,0); // WHITE
-        game.doMove(3,5); // BLACK
-        game.doMove(6,2); // WHITE
-        game.doMove(0,8); // BLACK
-        game.doMove(7,1); // WHITE
+        game.doMove(4, 1); // WHITE
+        game.doMove(5, 2); // BLACK
+        game.doMove(5, 1); // WHITE
+        game.doMove(2, 4); // BLACK
+        game.doMove(6, 0); // WHITE
+        game.doMove(3, 5); // BLACK
+        game.doMove(6, 2); // WHITE
+        game.doMove(0, 8); // BLACK
+        game.doMove(7, 1); // WHITE
         // next move is suicide move which captures white stones on positions (4,1) and (5,1), so these should be
         //  empty afterwards, and black stone on (6,1) should still be there:
-        game.doMove(6,1); // BLACK
-        assertTrue(board.isEmptyPosition(4,1));
-        assertTrue(board.isEmptyPosition(5,1));
-        assertEquals(board.getStone(6,1), Stone.BLACK);
+        game.doMove(6, 1); // BLACK
+        assertTrue(board.isEmptyPosition(4, 1));
+        assertTrue(board.isEmptyPosition(5, 1));
+        assertEquals(board.getStone(6, 1), Stone.BLACK);
 
         // test whether placing a stone which results in capturing two groups correctly removes both groups:
-        game.doMove(1,4); // WHITE
-        game.doMove(8,2); // BLACK
-        game.doMove(2,3); // WHITE
-        game.doMove(2,8); // BLACK
-        game.doMove(3,4); // WHITE
-        game.doMove(6,5); // BLACK
-        game.doMove(4,5); // WHITE
-        game.doMove(1,7); // BLACK
-        game.doMove(3,6); // WHITE
-        game.doMove(0,6); // BLACK
+        game.doMove(1, 4); // WHITE
+        game.doMove(8, 2); // BLACK
+        game.doMove(2, 3); // WHITE
+        game.doMove(2, 8); // BLACK
+        game.doMove(3, 4); // WHITE
+        game.doMove(6, 5); // BLACK
+        game.doMove(4, 5); // WHITE
+        game.doMove(1, 7); // BLACK
+        game.doMove(3, 6); // WHITE
+        game.doMove(0, 6); // BLACK
         // next move captures both the BLACK stone on position (2,4) and the BLACK stone on position (3,5), which
         // are separate groups. Both positions should be empty afterwards:
-        game.doMove(2,5); // WHITE
-        assertTrue(board.isValidPosition(2,4));
-        assertTrue(board.isValidPosition(3,5));
+        game.doMove(2, 5); // WHITE
+        assertTrue(board.isValidPosition(2, 4));
+        assertTrue(board.isValidPosition(3, 5));
+
+        board.printBoard();
+        int blackPlacedStones = game.getNumberOfStones(playerBlack, board.toString());
+        int whitePlacedStones = game.getNumberOfStones(playerWhite, board.toString());
+        int blackCapturedStones = game.getFinalCapturedPositions(playerBlack);
+        int whiteCapturedStones = game.getFinalCapturedPositions(playerWhite);
     }
 
     @Test
     public void testFinalScore() {
-       //TODO
+        //TODO
     }
 
     @Test
