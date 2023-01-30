@@ -53,6 +53,24 @@ public class GameTest {
         assertEquals(game.getStoneOpponent(playerWhite), Stone.BLACK);
     }
 
+    @Test
+    public void testGetRandomValidMove() {
+        game.createEmptyPositionSet();
+        // on an empty board, there must be a random valid position to make a move:
+        Position randomValidPosition = game.findRandomValidPosition();
+        assertFalse(randomValidPosition == null);
+
+        // on a full board, there is no random valid position available and therefore the outcome should be equal to
+        // null:
+        for (int row = 0; row < Board.SIZE; row++) {
+            for (int column = 0; column < Board.SIZE; column++) {
+                board.placeStone(row, column, Stone.BLACK);
+            }
+        }
+        Position randomValidPosition1 = game.findRandomValidPosition();
+        assertTrue(randomValidPosition1 == null);
+    }
+
     /**
      * Test to check a move on being a valid move (placed within the boundaries of the board, on an empty position
      * and not resulting in ko rule violation).
@@ -77,14 +95,14 @@ public class GameTest {
         // on an empty board, all positions should be valid positions, so both the size of the list of empty positions
         // and the size of the list of valid positions must be (board.SIZE * board.SIZE)
         game.createEmptyPositionSet();
-        assertTrue((game.getEmptyPositions().size() == (board.SIZE * board.SIZE)));
-        assertTrue((game.getListOfValidPositions(game.getCurrentPlayer())).size() == (board.SIZE * board.SIZE));
+        assertTrue((game.getEmptyPositions().size() == (Board.SIZE * Board.SIZE)));
+        assertEquals((game.getListOfValidPositions(game.getCurrentPlayer())).size(), (Board.SIZE * Board.SIZE));
 
         // after placing a stone on the board, the size of the list of empty positions and the size of list of valid
         // positions must be ((board.SIZE * board.SIZE) -1)
         game.doMove(2, 2);
-        assertTrue((game.getEmptyPositions().size() == ((board.SIZE * board.SIZE) - 1)));
-        assertTrue((game.getListOfValidPositions(game.getCurrentPlayer())).size() == ((board.SIZE * board.SIZE) - 1));
+        assertTrue((game.getEmptyPositions().size() == ((Board.SIZE * Board.SIZE) - 1)));
+        assertEquals((game.getListOfValidPositions(game.getCurrentPlayer())).size(),((Board.SIZE * Board.SIZE) - 1));
 
         // after removing the previously placed stone from the board, the list of empty positions and the size of the
         // list of valid positions mus be (board.SIZE * board.SIZE) again.
@@ -92,15 +110,15 @@ public class GameTest {
         // (manually adding this position to the set of empty positions again, as removal only occurs after capture in
         // the game class!)
         game.getEmptyPositions().add(new Position (2,2));
-        assertTrue((game.getEmptyPositions().size() == (board.SIZE * board.SIZE)));
-        assertTrue((game.getListOfValidPositions(game.getCurrentPlayer())).size() == (board.SIZE * board.SIZE));
+        assertTrue((game.getEmptyPositions().size() == (Board.SIZE * Board.SIZE)));
+        assertEquals((game.getListOfValidPositions(game.getCurrentPlayer())).size(), (Board.SIZE * Board.SIZE));
 
         // after switching the turn, the list of empty positions should still be (board.SIZE * board.SIZE), but the
         // size of the list of valid positions should be ((board.SIZE * board.SIZE) -1) again, as doing the move (2,2)
         // would result in ko rule violation!
         game.switchTurn();
-        assertTrue((game.getEmptyPositions().size() == (board.SIZE * board.SIZE)));
-        assertTrue((game.getListOfValidPositions(game.getCurrentPlayer())).size() == ((board.SIZE * board.SIZE) - 1));
+        assertTrue((game.getEmptyPositions().size() == (Board.SIZE * Board.SIZE)));
+        assertEquals((game.getListOfValidPositions(game.getCurrentPlayer())).size(), ((Board.SIZE * Board.SIZE) - 1));
     }
 
     /**
@@ -202,7 +220,7 @@ public class GameTest {
     }
 
     @Test
-    public void testCaptures() {
+    public void testCapturesAndFinalScore() {
         game.createEmptyPositionSet();
 
         // test capturing a group of stones:
@@ -244,7 +262,7 @@ public class GameTest {
         game.doMove(0, 8); // BLACK
         game.doMove(7, 1); // WHITE
         // next move is suicide move which captures white stones on positions (4,1) and (5,1), so these should be
-        //  empty afterwards, and black stone on (6,1) should still be there:
+        // empty afterwards, and black stone on (6,1) should still be there:
         game.doMove(6, 1); // BLACK
         assertTrue(board.isEmptyPosition(4, 1));
         assertTrue(board.isEmptyPosition(5, 1));
@@ -268,20 +286,29 @@ public class GameTest {
         assertTrue(board.isValidPosition(3, 5));
 
         board.printBoard();
+        // based on all placed stones as above, the score can be calculated. The first part of the final score is
+        // calculated as the number of stones that is placed on the board per player:
         int blackPlacedStones = game.getNumberOfStones(playerBlack, board.toString());
         int whitePlacedStones = game.getNumberOfStones(playerWhite, board.toString());
+        assertEquals(blackPlacedStones, 12);
+        assertEquals(whitePlacedStones, 17);
+
+        // The second part of the final score is calculated as the number of captured positions on the board per player:
         int blackCapturedStones = game.getFinalCapturedPositions(playerBlack);
         int whiteCapturedStones = game.getFinalCapturedPositions(playerWhite);
-    }
+        assertEquals(blackCapturedStones, 4);
+        assertEquals(whiteCapturedStones, 7);
 
-    @Test
-    public void testFinalScore() {
-        //TODO
-    }
+        // The final score is the sum of the both numbers as calculated above:
+        int finalScoreBlack = game.finalScore(playerBlack);
+        int finalScoreWhite = game.finalScore(playerWhite);
+        assertEquals(finalScoreBlack, 16);
+        assertEquals(finalScoreWhite, 24);
 
-    @Test
-    public void testGetWinner() {
-        //TODO
+        // In this case, playerWhite should be the winner of the game:
+        assertEquals(game.getWinner(), playerWhite);
+        assertNotEquals(game.getWinner(), playerBlack);
+        assertNotEquals(game.getWinner(), null);
     }
 }
 
