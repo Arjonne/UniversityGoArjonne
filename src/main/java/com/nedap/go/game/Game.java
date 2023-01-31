@@ -7,22 +7,21 @@ import java.util.*;
  */
 
 public class Game {
-    private Player playerBlack;
-    private Player playerWhite;
-    private Board board;
-    private GoGUI goGUI;
+    private final Player playerBlack;
+    private final Player playerWhite;
+    private final Board board;
+    private final GoGUI goGUI;
     private Player currentPlayer;
-    private static int passCount; // probably static, but check if it works when game is finished!
-    private List<String> listPreviousBoards;
-    private Set<Position> emptyPositions;
-
+    private static int passCount; //todo probably static, but check if it works when game is finished!
+    private final List<String> listPreviousBoards;
+    private final Set<Position> emptyPositions;
 
     /**
-     * Creates a new game with two players and a board.
+     * Creates a new game with two players, a board and the GUI representation of the board.
      *
-     * @param playerBlack player with black stones
-     * @param playerWhite player with white stones
-     * @param board       the game board
+     * @param playerBlack player with black stones;
+     * @param playerWhite player with white stones;
+     * @param board       the game board.
      */
     public Game(Player playerBlack, Player playerWhite, Board board, GoGUI goGUI) {
         this.playerBlack = playerBlack;
@@ -40,21 +39,12 @@ public class Game {
         emptyPositions = new HashSet<>();
     }
 
-    /**
-     * Switches from player (after a move or pass is done).
-     */
-    public void switchTurn() {
-        if (currentPlayer == playerBlack) {
-            currentPlayer = playerWhite;
-        } else {
-            currentPlayer = playerBlack;
-        }
-    }
+    // Getters:
 
     /**
      * Gets the board.
      *
-     * @return the board of the game
+     * @return the board of the game.
      */
     public Board getBoard() {
         return board;
@@ -63,8 +53,8 @@ public class Game {
     /**
      * Gets the stone of the current player.
      *
-     * @param currentPlayer is the player that currently can make a move or pass
-     * @return the stone this player uses
+     * @param currentPlayer is the player that currently can make a move or pass;
+     * @return the stone this player uses.
      */
     public Stone getStone(Player currentPlayer) {
         if (currentPlayer == playerBlack) {
@@ -77,8 +67,8 @@ public class Game {
     /**
      * Gets the stone of the opponent of the current player.
      *
-     * @param currentPlayer is the player that currently can make a move or pass
-     * @return the stone the opponent player uses
+     * @param currentPlayer is the player that currently can make a move or pass;
+     * @return the stone the opponent player uses.
      */
     public Stone getStoneOpponent(Player currentPlayer) {
         if (currentPlayer == playerBlack) {
@@ -91,7 +81,7 @@ public class Game {
     /**
      * Gets the player who is currently playing.
      *
-     * @return the player that can make a move or pass (either playerBlack or playerWhite)
+     * @return the player that can make a move or pass (either playerBlack or playerWhite).
      */
     public Player getCurrentPlayer() {
         if (currentPlayer == playerBlack) {
@@ -101,26 +91,25 @@ public class Game {
         }
     }
 
+    // Methods needed to determine a (random) valid move:
+
     /**
      * Creates a set that stores all positions on which no stone is placed. As all positions are empty at the start of
      * the game, all positions are added to this set by creating it.
-     *
-     * @return the complete set of empty positions
      */
-    public Set<Position> createEmptyPositionSet() {
-        for (int row = 0; row < board.SIZE; row++) {
-            for (int column = 0; column < board.SIZE; column++) {
+    public void createEmptyPositionSet() {
+        for (int row = 0; row < Board.SIZE; row++) {
+            for (int column = 0; column < Board.SIZE; column++) {
                 Position position = new Position(row, column);
                 emptyPositions.add(position);
             }
         }
-        return emptyPositions;
     }
 
     /**
      * Gets the set with all positions on which no stone is placed.
      *
-     * @return the complete set with empty positions
+     * @return the complete set with empty positions.
      */
     public Set<Position> getEmptyPositions() {
         return emptyPositions;
@@ -129,10 +118,9 @@ public class Game {
     /**
      * Gets a list of valid position based on random empty positions on the board that do not violate the ko rule.
      *
-     * @param player is the player of interest
-     * @return the list of valid positions
+     * @return the list of valid positions.
      */
-    public List<Position> getListOfValidPositions(Player player) {
+    public List<Position> getListOfValidPositions() {
         // First, get the set of empty positions:
         Set<Position> setOfEmptyPositions = getEmptyPositions();
         // Create a new list to be able to store the valid positions. Use a list, so that it is possible to get a
@@ -143,15 +131,12 @@ public class Game {
         // position that actually exists on the board and whether the ko rule is not violated by placing this stone).
         // If the move is a valid move, add the position to the list of valid positions.
         for (Position position : setOfEmptyPositions) {
-            Board copyBoard = getBoard().copyBoard();
-            copyBoard.placeStone(position.getRow(), position.getColumn(), player.getStone());
             if (isValidMove(position.getRow(), position.getColumn())) {
                 listOfValidPositions.add(position);
             }
         }
         return listOfValidPositions;
     }
-
 
     /**
      * Finds a valid position based on a random empty position on the board that does not violate the ko rule.
@@ -161,26 +146,24 @@ public class Game {
     public Position findRandomValidPosition() {
         // to be able to find a random valid position, the game must not be over yet, and the list of valid positions
         // must not be empty.
-        if (!isGameOver() && !getListOfValidPositions(getCurrentPlayer()).isEmpty()) {
-            List<Position> listOfValidPositions = getListOfValidPositions(getCurrentPlayer());
+        if (!isGameOver() && !getListOfValidPositions().isEmpty()) {
+            List<Position> listOfValidPositions = getListOfValidPositions();
             // to be able to make a random move (on a random valid position), get a random index of the list with
             // valid positions and get the position that is stored on that index.
             int randomValidIndex = (int) (Math.random() * listOfValidPositions.size());
-            Position randomValidPosition = listOfValidPositions.get(randomValidIndex);
-            return randomValidPosition;
+            return listOfValidPositions.get(randomValidIndex);
         } else {
             return null;
         }
     }
 
-
     /**
      * Checks whether the move a player wants to make, is a valid move (whether te stone is placed on an existing
      * position and whether this stone is placed on an empty position).
      *
-     * @param row    is the row a player wants to place a stone
-     * @param column is the column a player wants to place a stone
-     * @return true if the move is valid; false if not
+     * @param row    is the row a player wants to place a stone;
+     * @param column is the column a player wants to place a stone;
+     * @return true if the move is valid; false if not.
      */
     public boolean isValidMove(int row, int column) {
         // check if position is a valid position on the board
@@ -192,23 +175,20 @@ public class Game {
             return false;
         }
         // check if placed stone will result in violating ko rule by placing this stone on a copy of the current board
-        // (this way, you don't have to replace all captured stones if ko rule is violated and move must be undone.
+        // (this way, you don't have to replace all captured stones if ko rule is violated and move must be undone).
         Board copyBoard = board.copyBoard();
         copyBoard.placeStone(row, column, getStone(currentPlayer));
         removeIfIsCaptured(row, column);
         removeIfHasCaptured(row, column);
-        if (isKoRuleViolated(copyBoard.toString())) {
-            return false;
-        }
-        return true;
+        return !isKoRuleViolated(copyBoard.toString());
     }
 
     /**
      * Checks whether the ko rule is violated (which means, that the current state of the board has been
      * existing before and therefore this move is not a valid move).
      *
-     * @param stringRepresentationOfBoard is the String representation of the current board
-     * @return true if this state of the board has existed before
+     * @param stringRepresentationOfBoard is the String representation of the current board;
+     * @return true if this state of the board has existed before.
      */
     public boolean isKoRuleViolated(String stringRepresentationOfBoard) {
         // loop through the list with Strings (in which all previous board states are saved) and compare the current
@@ -222,27 +202,28 @@ public class Game {
         return false;
     }
 
-// Methods needed to check whether placed stone is/has captured ((by) a group of) stones:
+// Methods needed to check whether a placed stone is captured by (a group of) stone(s) or has captured (a group of)
+// stone(s):
 
     /**
      * Gets a set with the positions of the neighbours of the placed or checked stone.
      *
-     * @param row    is the row a player has placed a stone, or the row of the checked stone
-     * @param column is the column a player has placed a stone, or the column of the checked stone
-     * @return a set of positions of the neighbours of the placed or checked stone
+     * @param row    is the row a player has placed a stone, or the row of the checked stone;
+     * @param column is the column a player has placed a stone, or the column of the checked stone;
+     * @return a set of positions of the neighbours of the placed or checked stone.
      */
     public Set<Position> getNeighbourPositions(int row, int column) {
         Set<Position> neighbourPositions = new HashSet<>();
         if (row != 0) {
             neighbourPositions.add(new Position((row - 1), column));
         }
-        if (row != (board.SIZE - 1)) {
+        if (row != (Board.SIZE - 1)) {
             neighbourPositions.add(new Position((row + 1), column));
         }
         if (column != 0) {
             neighbourPositions.add(new Position(row, (column - 1)));
         }
-        if (column != (board.SIZE - 1)) {
+        if (column != (Board.SIZE - 1)) {
             neighbourPositions.add(new Position(row, (column + 1)));
         }
         return neighbourPositions;
@@ -251,7 +232,7 @@ public class Game {
     /**
      * Gets a set with the stones that are located on the neighbour positions.
      *
-     * @return a set of stones that are located on the neighbour positions
+     * @return a set of stones that are located on the neighbour positions.
      */
     public Set<Stone> getNeighbourStones(Set<Position> neighbourPositions) {
         Set<Stone> neighbourStones = new HashSet<>();
@@ -265,7 +246,7 @@ public class Game {
     /**
      * Checks whether the stone to check has a neighbour stone with the same color.
      *
-     * @return true if the placed stone has a neighbour of the same color, false if not
+     * @return true if the placed stone has a neighbour of the same color, false if not.
      */
     public boolean hasNeighbourOfSameColor(Set<Stone> neighbourStones, Stone stone) {
         for (Stone neighbourStone : neighbourStones) {
@@ -298,15 +279,14 @@ public class Game {
      * Creates a new set to be able to keep track of the positions that are checked on their neighbour stones.
      */
     public Set<Position> createSetOfCheckedPositions() {
-        Set<Position> checkedPositions = new HashSet<>();
-        return checkedPositions;
+        return new HashSet<>();
     }
 
     /**
      * Checks whether the checked stone has a neighbour that results in no capture (during the game: an empty neighbour
      * ensures no capture, for the final score count, a neighbour stone of the opponent results in no capture).
      *
-     * @return true if the checked stone has a neighbour stone that results in no capture, false if not
+     * @return true if the checked stone has a neighbour stone that results in no capture, false if not.
      */
     public boolean hasNeighbourThatEnsuresNoCapture(Set<Stone> neighbourStones, Stone stoneResultingInNoCapture) {
         for (Stone neighbourStone : neighbourStones) {
@@ -321,8 +301,8 @@ public class Game {
      * Checks whether the current player has captured a stone or group of stones of the opponent with the current move,
      * and if it does, this group is removed.
      *
-     * @param row    is the row a player wants to place a stone
-     * @param column is the column a player wants to place a stone
+     * @param row    is the row a player wants to place a stone;
+     * @param column is the column a player wants to place a stone.
      */
     public void removeIfHasCaptured(int row, int column) {
         // 1.  Find the position of the direct neighbours of the placed stone;
@@ -338,9 +318,6 @@ public class Game {
         Set<Set<Position>> opponentGroupPositionsPlacedStone = createSetOfOpponentGroupPositionSets(neighbourPositions);
         // 5.  Loop through the set with (maximal four) sets of one position;
         for (Set<Position> positionsOfPossiblyCapturedGroup : opponentGroupPositionsPlacedStone) {
-            //TODO als tijd: check if possiblePositionsOfCapturedGroup al onderdeel is van een eerder gecheckte groep;
-            // dan hoeft niet verder (geen dubbel check nodig).
-
             // 6.  Check for each of these positions if they are part of a group that is captured by making this move.
             Set<Position> neighbourGroup = getCapturedGroup(positionsOfPossiblyCapturedGroup, Stone.EMPTY);
             // 7.  If the neighbourGroup is not captured, this group is returned as an empty Set of positions. If the
@@ -348,24 +325,21 @@ public class Game {
             //      will be removed from the board.
             if (!neighbourGroup.isEmpty()) {
                 removeGroupOfStones(neighbourGroup);
-                emptyPositions.addAll(neighbourGroup);
             }
         }
     }
-
 
     /**
      * Gets a set with all the positions of a captured group.
      *
      * @param positionsOfPossiblyCapturedGroup contains the position of the stone that might be part of a group that
      *                                         is captured and now needs to be checked (direct neighbour of a placed
-     *                                         stone for hasCaptured and the placed stone itself for isCaptured)
+     *                                         stone for hasCaptured and the placed stone itself for isCaptured);
      * @param stoneResultingInNoCapture        is the neighbour stone that directly ensures that there is no capture
      *                                         (which is an EMPTY position during the game, and the stone of the
-     *                                         opponent during the count of the final score)
-     * @return a set of all positions of a captured group; return an empty set if group is not captured
+     *                                         opponent during the count of the final score);
+     * @return a set of all positions of a captured group; return an empty set if group is not captured.
      */
-
     private Set<Position> getCapturedGroup(Set<Position> positionsOfPossiblyCapturedGroup, Stone stoneResultingInNoCapture) {
         // 1.  Create a new set to store the checked stones;
         Set<Position> checkedPositions = createSetOfCheckedPositions();
@@ -411,8 +385,8 @@ public class Game {
     /**
      * Checks whether the current player has self-captured (suicide) a stone or group of stones with this move.
      *
-     * @param row    is the row a player wants to place a stone
-     * @param column is the column a player wants to place a stone
+     * @param row    is the row a player wants to place a stone;
+     * @param column is the column a player wants to place a stone.
      */
     public void removeIfIsCaptured(int row, int column) {
         // 1.  Create a new set and add the placed stone, to be able to check if it is part of a group and if this stone
@@ -426,60 +400,19 @@ public class Game {
         //      will be removed from the board.
         if (!checkedGroup.isEmpty()) {
             removeGroupOfStones(checkedGroup);
-            emptyPositions.addAll(checkedGroup);
         }
-    }
-
-    /**
-     * Calculates the score based on captured positions by checking all empty positions on being captured by one player.
-     *
-     * @param emptyPositions is the set of empty positions that should be checked on whether it is captured by one of
-     *                       the players to be able to calculate the final score
-     * @param player         is the player whose score is being calculated
-     * @return the number of captured positions
-     */
-    public int scoreBasedOnCapturedPositions(Set<Position> emptyPositions, Player player) {
-        //TODO check overlap with getCapturedGroup()!!!
-
-        // create a new set to be able to store all empty positions that are captured by a player (use a set to prevent
-        // storing the same position twice).
-        Set<Position> positionsOfCaptures = new HashSet<>();
-        // create a new queue with all empty positions to be able to remove checked positions and prevent double-checking.
-        Queue<Position> emptyPositionsQueue = new LinkedList<>(emptyPositions);
-        // check all positions in the queue and check whether this position is captured, or part of a group of empty
-        // positions that is being captured by the player of interest.
-        while (!emptyPositionsQueue.isEmpty()) {
-            Position position = emptyPositionsQueue.poll();
-            Set<Position> positionsOfPossiblyCapturedGroup = new HashSet<>();
-            positionsOfPossiblyCapturedGroup.add(position);
-            Set<Position> checkedGroup = getCapturedGroup(positionsOfPossiblyCapturedGroup, getStoneOpponent(player));
-            // if the position is actually (part of a group that is) captured, this position is added to the set with
-            // captured positions. Besides that, the queue is checked on containing position(s) of the captured (group
-            // of) stone(s). If positions have overlap, these positions are removed from the queue to prevent
-            // double-checking:
-            if (!checkedGroup.isEmpty()) {
-                positionsOfCaptures.addAll(checkedGroup);
-                for (Position checkedPosition : checkedGroup) {
-                    if (emptyPositionsQueue.contains(checkedPosition)) {
-                        emptyPositionsQueue.remove(checkedPosition);
-                    }
-                }
-            }
-        }
-        // the final count of captures is equal to the number of positions that is stored in the set:
-        int countOfFinalCaptures = positionsOfCaptures.size();
-        return countOfFinalCaptures;
     }
 
     /**
      * Removes a single stone from the board (ko rule violation).
      *
-     * @param row    is the row the stone to be removed is positioned
-     * @param column is the column the stone to be removed is positioned
+     * @param row    is the row the stone to be removed is positioned;
+     * @param column is the column the stone to be removed is positioned.
      */
     public void removeStone(int row, int column) {
+        emptyPositions.add(new Position(row, column));
         board.removeStone(row, column);
-        goGUI.removeStone(row, column);
+        goGUI.removeStone(column, row);
     }
 
     /**
@@ -493,17 +426,30 @@ public class Game {
         }
     }
 
+    // Methods needed to play the game:
+
+    /**
+     * Switches from player (after a move or pass is done).
+     */
+    public void switchTurn() {
+        if (currentPlayer == playerBlack) {
+            currentPlayer = playerWhite;
+        } else {
+            currentPlayer = playerBlack;
+        }
+    }
+
     /**
      * Executes the move when this move is found to be valid. If not valid, the turn stays at this player and he/she
      * needs to try a new move or pass.
      *
-     * @param row    is the row a player wants to place a stone
-     * @param column is the column a player wants to place a stone
+     * @param row    is the row a player wants to place a stone;
+     * @param column is the column a player wants to place a stone.
      */
     public void doMove(int row, int column) {
         if (isValidMove(row, column)) {
             board.placeStone(row, column, getStone(currentPlayer));
-            goGUI.placeStone(row, column, getStone(currentPlayer));
+            goGUI.placeStone(column, row, getStone(currentPlayer));
             // hasCaptured checked before isCaptured, as a suicide move resulting in capturing a group is allowed:
             removeIfHasCaptured(row, column);
             removeIfIsCaptured(row, column);
@@ -532,10 +478,12 @@ public class Game {
         switchTurn();
     }
 
+    // Methods needed to define whether the game is over:
+
     /**
      * Gets the passCounter (number of consecutive passes).
      *
-     * @return the number of consecutive passes
+     * @return the number of consecutive passes.
      */
     public int getPassCount() {
         return passCount;
@@ -544,17 +492,19 @@ public class Game {
     /**
      * Checks whether the game is over.
      *
-     * @return true if two consecutive passes are done OR all positions on the board are filled, otherwise false
+     * @return true if two consecutive passes are done OR all positions on the board are filled, otherwise false.
      */
     public boolean isGameOver() {
         return passCount == 2 || getBoard().isFull();
     }
 
+    // Methods needed for calculating the final score and find the winner of the game:
+
     /**
      * Gets the char representation of the player on the board.
      *
-     * @param player is the player of interest
-     * @return the char representation of the player, which is 'B' for playerBlack and 'W' for playerWhite
+     * @param player is the player of interest;
+     * @return the char representation of the player, which is 'B' for playerBlack and 'W' for playerWhite.
      */
     public char getCharOfPlayer(Player player) {
         char charLetter;
@@ -569,17 +519,16 @@ public class Game {
     /**
      * Gets th first part of the final score: the total number of stones that is located on the final board.
      *
-     * @param player                      is the player whose stones on the board are counted
+     * @param player                      is the player whose stones on the board are counted;
      * @param stringRepresentationOfBoard is the string representation of the board that is used to get the number of
-     *                                    stones that are located on the final state of the board
-     * @return the total number of stones located on the board for the player of interest
+     *                                    stones that are located on the final state of the board;
+     * @return the total number of stones located on the board for the player of interest.
      */
     public int getNumberOfStones(Player player, String stringRepresentationOfBoard) {
         int numberOfStones = 0;
         char charLetter = getCharOfPlayer(player);
         for (int i = 0; i < stringRepresentationOfBoard.length(); i++) {
             if (stringRepresentationOfBoard.charAt(i) == charLetter) {
-                //      if (Character.isLetter(charLetter)) {
                 numberOfStones++;
             }
         }
@@ -587,10 +536,46 @@ public class Game {
     }
 
     /**
+     * Calculates the score based on captured positions by checking all empty positions on being captured by one player.
+     *
+     * @param emptyPositions is the set of empty positions that should be checked on whether it is captured by one of
+     *                       the players to be able to calculate the final score;
+     * @param player         is the player whose score is being calculated;
+     * @return the number of captured positions.
+     */
+    public int scoreBasedOnCapturedPositions(Set<Position> emptyPositions, Player player) {
+        // 1.  create a new set to be able to store all empty positions that are captured by a player (use a set to prevent
+        //      storing the same position twice).
+        Set<Position> positionsOfCaptures = new HashSet<>();
+        // 2.  create a new queue with all empty positions to be able to remove checked positions and prevent double-checking.
+        Queue<Position> emptyPositionsQueue = new LinkedList<>(emptyPositions);
+        // 3.  check all positions in the queue and check whether this position is captured, or part of a group of empty
+        //      positions that is being captured by the player of interest.
+        while (!emptyPositionsQueue.isEmpty()) {
+            Position position = emptyPositionsQueue.poll();
+            Set<Position> positionsOfPossiblyCapturedGroup = new HashSet<>();
+            positionsOfPossiblyCapturedGroup.add(position);
+            Set<Position> checkedGroup = getCapturedGroup(positionsOfPossiblyCapturedGroup, getStoneOpponent(player));
+            // 4.  if the position is actually (part of a group that is) captured, this position is added to the set with
+            //      captured positions. Besides that, the queue is checked on containing position(s) of the captured (group
+            //      of) stone(s). If positions have overlap, these positions are removed from the queue to prevent
+            //      double-checking:
+            if (!checkedGroup.isEmpty()) {
+                positionsOfCaptures.addAll(checkedGroup);
+                for (Position checkedPosition : checkedGroup) {
+                    emptyPositionsQueue.remove(checkedPosition);
+                }
+            }
+        }
+        // 5.  the final count of captures is equal to the number of positions that is stored in the set:
+        return positionsOfCaptures.size();
+    }
+
+    /**
      * Gets the final score based on the captured positions on the board.
      *
-     * @param player is the player the final score based on captured positions
-     * @return the number of captured positions on the board
+     * @param player is the player the final score based on captured positions;
+     * @return the number of captured positions on the board.
      */
     public int getFinalCapturedPositions(Player player) {
         return scoreBasedOnCapturedPositions(emptyPositions, player);
@@ -599,20 +584,19 @@ public class Game {
     /**
      * Calculates the final score of the player.
      *
-     * @param player is player of interest
-     * @return the final score
+     * @param player is player of interest;
+     * @return the final score.
      */
     public int finalScore(Player player) {
         int stonesOnBoard = getNumberOfStones(player, board.toString());
         int capturedPositions = getFinalCapturedPositions(player);
-        int finalScore = stonesOnBoard + capturedPositions;
-        return finalScore;
+        return stonesOnBoard + capturedPositions;
     }
 
     /**
      * Gets the winner of this game.
      *
-     * @return the player with the most points; can be null if the game ended in a draw
+     * @return the player with the most points; can be null if the game ended in a draw.
      */
     public String getWinner() {
         if (finalScore(playerBlack) > finalScore(playerWhite)) {
