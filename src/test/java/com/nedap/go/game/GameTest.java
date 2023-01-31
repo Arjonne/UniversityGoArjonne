@@ -11,7 +11,6 @@ public class GameTest {
     private Player playerWhite;
     private Board board;
 
-
     /**
      * Before tests can be done, the game should be made using the constructor of the Game class.
      */
@@ -25,7 +24,8 @@ public class GameTest {
     }
 
     /**
-     * Test to check whether switchTurn() does correctly switch the turn from player with Black to player with White and other way around.
+     * Test to check whether switchTurn() does correctly switch the turn from player with Black to player with White
+     * and other way around.
      */
     @Test
     public void testSwitchTurn() {
@@ -91,19 +91,22 @@ public class GameTest {
         assertFalse(game.isValidMove(1, 1));
     }
 
+    /**
+     * Test to check whether a random valid position for a next move can be found.
+     */
     @Test
     public void testFindRandomValidPositions() {
         // on an empty board, all positions should be valid positions, so both the size of the list of empty positions
         // and the size of the list of valid positions must be (board.SIZE * board.SIZE)
         game.createEmptyPositionSet();
         assertTrue((game.getEmptyPositions().size() == (Board.SIZE * Board.SIZE)));
-        assertEquals((game.getListOfValidPositions(game.getCurrentPlayer())).size(), (Board.SIZE * Board.SIZE));
+        assertEquals((game.getListOfValidPositions()).size(), (Board.SIZE * Board.SIZE));
 
         // after placing a stone on the board, the size of the list of empty positions and the size of list of valid
         // positions must be ((board.SIZE * board.SIZE) -1)
         game.doMove(2, 2);
         assertTrue((game.getEmptyPositions().size() == ((Board.SIZE * Board.SIZE) - 1)));
-        assertEquals((game.getListOfValidPositions(game.getCurrentPlayer())).size(),((Board.SIZE * Board.SIZE) - 1));
+        assertEquals((game.getListOfValidPositions()).size(),((Board.SIZE * Board.SIZE) - 1));
 
         // after removing the previously placed stone from the board, the list of empty positions and the size of the
         // list of valid positions mus be (board.SIZE * board.SIZE) again.
@@ -112,14 +115,14 @@ public class GameTest {
         // the game class!)
         game.getEmptyPositions().add(new Position (2,2));
         assertTrue((game.getEmptyPositions().size() == (Board.SIZE * Board.SIZE)));
-        assertEquals((game.getListOfValidPositions(game.getCurrentPlayer())).size(), (Board.SIZE * Board.SIZE));
+        assertEquals((game.getListOfValidPositions()).size(), (Board.SIZE * Board.SIZE));
 
         // after switching the turn, the list of empty positions should still be (board.SIZE * board.SIZE), but the
         // size of the list of valid positions should be ((board.SIZE * board.SIZE) -1) again, as doing the move (2,2)
         // would result in ko rule violation!
         game.switchTurn();
         assertTrue((game.getEmptyPositions().size() == (Board.SIZE * Board.SIZE)));
-        assertEquals((game.getListOfValidPositions(game.getCurrentPlayer())).size(), ((Board.SIZE * Board.SIZE) - 1));
+        assertEquals((game.getListOfValidPositions()).size(), ((Board.SIZE * Board.SIZE) - 1));
     }
 
     /**
@@ -181,22 +184,25 @@ public class GameTest {
      */
     @Test
     public void testGetNeighbourPositions() {
-        // at position (row 1, column 1), the number of neighbours should be 4
+        // at position (row 1, column 1), the number of neighbours should be 4:
         game.getNeighbourPositions(1, 1);
         assertEquals(4, game.getNeighbourPositions(1, 1).size());
-        // at position (row 0, column 0), the number of neighbours should be 2 as this position is located in the left upper corner
+        // at position (row 0, column 0), the number of neighbours should be 2 as this position is located in the left
+        // upper corner:
         game.getNeighbourPositions(0, 0);
         assertEquals(2, game.getNeighbourPositions(0, 0).size());
-        // at position (row SIZE-1, column 1), the number of neighbours should be 3 as this position is located on the right edge of the board
+        // at position (row SIZE-1, column 1), the number of neighbours should be 3 as this position is located on the
+        // right edge of the board:
         game.getNeighbourPositions((Board.SIZE - 1), 1);
         assertEquals(3, game.getNeighbourPositions((Board.SIZE - 1), 1).size());
-        // at position (row 1, column SIZE-1), the number of neighbours should be 3 as this position is located on the lower edge of the board
+        // at position (row 1, column SIZE-1), the number of neighbours should be 3 as this position is located on the
+        // lower edge of the board:
         game.getNeighbourPositions(1, (Board.SIZE - 1));
         assertEquals(3, game.getNeighbourPositions(1, (Board.SIZE - 1)).size());
     }
 
     /**
-     * Test whether getNeighbourStones() does get the correct stones that are neighbours in several positions.
+     * Test whether getNeighbourStones() does get the correct type of stones that are neighbours in several positions.
      */
     @Test
     public void testGetNeighbourStones() {
@@ -220,6 +226,10 @@ public class GameTest {
         assertFalse(game.hasNeighbourOfSameColor(game.getNeighbourStones(game.getNeighbourPositions(1, 2)), Stone.WHITE));
     }
 
+    /**
+     * Test whether several ways of capturing stones and self-capturing correctly results in removing stones, and also
+     * whether the final score is calculated correctly.
+     */
     @Test
     public void testCapturesAndFinalScore() {
         game.createEmptyPositionSet();
