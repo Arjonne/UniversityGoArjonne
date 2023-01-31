@@ -1,8 +1,6 @@
 package com.nedap.go.server;
-
-import com.nedap.go.Protocol;
-
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -11,13 +9,15 @@ import java.util.List;
 import java.util.Queue;
 
 /**
- * Represents the server for the GO game.
+ * Represents the server that hosts the GO game.
  */
 public class Server implements Runnable {
     //TODO check what needs to be global and what is a local variable!
     private int port;
+    private InetAddress address;
     private ServerSocket serverSocket;
     private Thread socketThread;
+    private Thread gameThread;
     private boolean isOpen;
     private List<ClientHandler> handlers;
     private List<String> usernames;
@@ -29,8 +29,9 @@ public class Server implements Runnable {
      * @param port is the port number that is needed to be able to connect to the server
      */
     //TODO probably add server address too here.
-    public Server(int port) {
+    public Server(int port, InetAddress address) {
         this.port = port;
+        this.address = address;
         // a new list is created that stores all clientsHandlers that are created to be able to communicate to clients:
         this.handlers = new ArrayList<>();
         // a new list is created that stores all usernames to be able to avoid double use of the same username:
@@ -59,7 +60,7 @@ public class Server implements Runnable {
             try {
                 serverSocket = new ServerSocket(port);
             } catch (IOException e) {
-                System.out.println("Cannot connect to the server.");
+                System.out.println("Not able to start the server with this port.");
             }
         }
         socketThread = new Thread(this);
@@ -136,11 +137,15 @@ public class Server implements Runnable {
                 Socket socket = serverSocket.accept();
                 ClientHandler clientHandler = new ClientHandler(socket, this);
                 addClient(clientHandler);
+                //todo: check of dit zo werkt...: create new thread for each game that is being played.
+//                if (clientHandler.createNewGame()) {
+//                    gameThread = new Thread();
+//                    gameThread.start();
+//                }
             }
         } catch (IOException e) {
-            System.out.println("Not able to make a connection between server and client handler OR connection is already closed.");
+            System.out.println("Not able to make a connection between server and client via clientHandler OR server is just closed.");
         }
-        System.out.println("Server has been closed");
     }
 
     /**
@@ -176,7 +181,9 @@ public class Server implements Runnable {
      * @param username is the username this client (player) uses
      */
     public synchronized void addUsername(String username) {
-        usernames.add(username);
+        if (!usernames.contains(username)) {
+            usernames.add(username);
+        }
     }
 
     /**
@@ -191,7 +198,7 @@ public class Server implements Runnable {
     /**
      * Gets the queue in which clients are waiting to play a GO game.
      *
-     * @return the queue with waiting clients for playing a GO game.
+     * @return the queue with waiting clients for playing a GO game
      */
     public Queue<ClientHandler> getWaitingQueue() {
         return waitingQueue;
@@ -214,5 +221,4 @@ public class Server implements Runnable {
     public synchronized void removeFromQueue(ClientHandler clientHandler) {
         waitingQueue.remove(clientHandler);
     }
-
 }

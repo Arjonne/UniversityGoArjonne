@@ -4,6 +4,9 @@ import com.nedap.go.server.Server;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 public class ServerTest {
@@ -11,8 +14,8 @@ public class ServerTest {
     private Server server;
 
     @BeforeEach
-    void setUp() {
-        server = new Server(0);
+    void setUp() throws UnknownHostException {
+        server = new Server(0, InetAddress.getLocalHost());
     }
 
     @Test
