@@ -15,8 +15,8 @@ import java.util.List;
  * Represents a clientHandler of the server for a connected client.
  */
 public class ClientHandler implements Runnable {
-    private Socket socket;
-    private Server server;
+    private final Socket socket;
+    private final Server server;
     private PrintWriter writerToClient;
     private BufferedReader inputFromClient;
     private String usernameStored;
@@ -56,6 +56,8 @@ public class ClientHandler implements Runnable {
         }
     }
 
+    // Methods needed to use the clientHandler:
+
     /**
      * Closes the clientHandler. To do so, first the client socket is closed, and both the printWriter and
      * bufferedReader are closed too to prevent leakage. Besides, the server removes this clientHandler from the
@@ -67,7 +69,7 @@ public class ClientHandler implements Runnable {
             socket.close();
             writerToClient.close();
             inputFromClient.close();
-            server.removeClient(this);
+            server.removeClientHandler(this);
             server.removeUsername(getUsername());
             if (server.getWaitingQueue().contains(this)) {
                 server.removeFromQueue(this);
@@ -120,12 +122,22 @@ public class ClientHandler implements Runnable {
                         } else {
                             game.doMove(row, column);
                             sendMove(getUsername(), row, column);
+                            if (getUsername().equals(username1)) {
+                                clientHandler2.sendYourTurn();
+                            } else {
+                                clientHandler1.sendYourTurn();
+                            }
                         }
                         break;
                     case PASS:
                         game.pass();
                         if (game.getPassCount() != 2) {
                             sendPass(getUsername());
+                            if (getUsername().equals(username1)) {
+                                clientHandler2.sendYourTurn();
+                            } else {
+                                clientHandler1.sendYourTurn();
+                            }
                         } else {
                             String winner = game.getWinner();
                             if (winner.equals(username1)) {
@@ -133,7 +145,7 @@ public class ClientHandler implements Runnable {
                             } else if (winner.equals(username2)) {
                                 sendGameOver(VICTORY, username2);
                             } else {
-                                sendGameOver(VICTORY, "no winner because of draw.");
+                                sendGameOver(VICTORY, "draw");
                             }
                         }
                         break;
@@ -154,14 +166,15 @@ public class ClientHandler implements Runnable {
                 break;
             }
         }
-
     }
+
+    // Methods needed to send the messages to the client:
 
     /**
      * Sends the welcome message as part of the handshake in the correct format to the client. Besides that,
      * the formatted message is visible in the server TUI.
      *
-     * @param serverID is the ID of the server
+     * @param serverID is the ID of the server.
      */
     public void sendWelcome(String serverID) {
         String serverIdFormatted = Protocol.welcomeMessage(serverID);
@@ -173,7 +186,7 @@ public class ClientHandler implements Runnable {
      * Sends a message that the entered username is already taken as part of the handshake in the correct format to the
      * clientHandler. Besides that, the formatted message is visible in the server TUI.
      *
-     * @param message is the message that describes that the username is not accepted as it is already in use
+     * @param message is the message that describes that the username is not accepted as it is already in use.
      */
     public void sendUsernameTaken(String message) {
         String messageFormatted = Protocol.usernameTaken(message);
@@ -185,7 +198,7 @@ public class ClientHandler implements Runnable {
      * Sends a message that the client is correctly connected to the server as part of the handshake in the correct
      * format to the clientHandler. Besides that, the formatted message is visible in the server TUI.
      *
-     * @param message is the message with description of the correct connection for the client
+     * @param message is the message with description of the correct connection for the client.
      */
     public void sendJoined(String message) {
         String messageFormatted = Protocol.joined(message);
@@ -217,12 +230,12 @@ public class ClientHandler implements Runnable {
     }
 
     /**
-     * Sends a message to both clients with which client made what move in the correct format to the clientHandler.
-     * Besides that, the formatted message is visible in the server TUI.
+     * Sends a message to both clients with which client made what move in the correct format. Besides that, the
+     * formatted message is visible in the server TUI.
      *
-     * @param username is the username of the client that made this move
-     * @param row      is the row of the position of this move
-     * @param column   is the column of the position of this move
+     * @param username is the username of the client that made this move;
+     * @param row      is the row of the position of this move;
+     * @param column   is the column of the position of this move.
      */
     public void sendMove(String username, int row, int column) {
         String moveFormatted = Protocol.move(username, row, column);
@@ -233,10 +246,10 @@ public class ClientHandler implements Runnable {
     }
 
     /**
-     * Sends a message to both clients with which client passed in the correct format to the clientHandler. Besides
+     * Sends a message to both clients with which client passed in the correct format to the client. Besides
      * that, the formatted message is visible in the server TUI.
      *
-     * @param username is the username of the client that passed
+     * @param username is the username of the client that passed.
      */
     public void sendPass(String username) {
         String passFormatted = Protocol.pass(username);
@@ -247,9 +260,8 @@ public class ClientHandler implements Runnable {
     }
 
     /**
-     * Sends a message to the client that an invalid move was made in the correct format to the clientHandler. This
-     * message was only sent to the client that made this invalid move. Besides that, the formatted message is visible
-     * in the server TUI.
+     * Sends a message to the client that an invalid move was made in the correct format. This message was only sent to
+     * the client that made this invalid move. Besides that, the formatted message is visible in the server TUI.
      */
     public void sendInvalidMove() {
         String invalidMoveFormatted = Protocol.invalidMove();
@@ -269,11 +281,13 @@ public class ClientHandler implements Runnable {
         System.out.println(gameOverFormatted);
     }
 
+    // Methods needed to process information received from the client:
+
     /**
      * Creates a new username for the player using the client connected to the clientHandler.
      *
-     * @param username is the username of the player using the client connected to the clientHandler
-     * @param clientInput is the command input line as received from the client
+     * @param username is the username of the player using the client connected to the clientHandler;
+     * @param clientInput is the command input line as received from the client.
      */
     public void createUsername(String username, String clientInput) {
         if ((server.getListOfUsernames().contains(username))) {
@@ -289,7 +303,7 @@ public class ClientHandler implements Runnable {
     /**
      * Saves the username to be able to reuse it in other commends.
      *
-     * @param username is the username the client thread is using
+     * @param username is the username the client thread is using.
      */
     public void saveUsername(String username) {
         usernameStored = username;
@@ -298,7 +312,7 @@ public class ClientHandler implements Runnable {
     /**
      * Gets the username of the client thread.
      *
-     * @return the username of the client thread
+     * @return the username of the client thread.
      */
     public String getUsername() {
         return usernameStored;
@@ -307,7 +321,7 @@ public class ClientHandler implements Runnable {
     /**
      * Puts the player using the client connected to this clientHandler in the queue.
      *
-     * @param clientInput is the command input line as received from the client
+     * @param clientInput is the command input line as received from the client.
      */
     public void enterQueue(String clientInput) {
         server.addToQueue(this);
@@ -326,6 +340,8 @@ public class ClientHandler implements Runnable {
      * Creates a new thread for playing a game with two players. Here, the game is created as well.
      */
     public void createNewGame() {
+        //todo new thread?
+
         // first, create a new list in which the clientHandlers of the two players can be stored.
         clientHandlerList = new ArrayList<>();
         // then, add the clientHandlers from the two clients that are in front of the queue.
