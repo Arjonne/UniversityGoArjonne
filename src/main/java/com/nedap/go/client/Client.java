@@ -6,7 +6,6 @@ import com.nedap.go.game.*;
 import java.io.*;
 import java.net.InetAddress;
 import java.net.Socket;
-import java.sql.SQLOutput;
 
 /**
  * Represents the client for the GO game.
@@ -19,7 +18,7 @@ public class Client implements Runnable {
     private PrintWriter writerToClientHandler;
     private String username;
     private String command;
-    private boolean usernameCreated = false;
+    private Stone stone;
     private Game goGame;
 
     public static final String SEPARATOR = "~";
@@ -32,8 +31,7 @@ public class Client implements Runnable {
     public static final String VICTORY = "VICTORY";
     public static final String YOURTURN = "YOURTURN";
     public static final String INVALIDMOVE = "INVALIDMOVE";
-    public static final String MOVE = "MOVE"; // both in server and client side?  username played this move || username passed
-    public static final String ERROR = "ERROR";
+    public static final String MOVE = "MOVE";
 
     /**
      * Creates a new client via which a player can play the game.
@@ -96,59 +94,38 @@ public class Client implements Runnable {
                 command = split[0];
                 switch (command) {
                     case WELCOME:
-//                        clientTui.setHasReceivedWelcome(true);
-                        username = clientTui.createUsername();
-                        setUsername(username);
-//                        if (isUsernameCreated()) {
-                        sendUsername(username);
-//                        }
+                        clientTui.setUsernameCanBeCreated(true);
                         break;
                     case USERNAMETAKEN:
                         System.out.println(split[1]);
-                        username = clientTui.createUsername();
-                        setUsername(username);
-                        sendUsername(username);
+                        clientTui.setUsernameIsTaken(true);
                         break;
                     case JOINED:
-                        System.out.println(split[1]);
-                        if (clientTui.enterQueue()) {
-                            sendQueue();
-                        } else {
-                            sendQuit();
-                        }
-//                        if (clientTui.leaveQueue()) {
-//                            sendQueue();
-//                        } else {
-//                            break;
-//                        }
+                        clientTui.setWantsToEnterQueue(true);
                         break;
                     case NEWGAME:
+                        clientTui.setWantsToEnterQueue(false);
+                        clientTui.setWantsToLeaveQueue(false);
                         String username1 = split[1];
                         String username2 = split[2];
                         startNewGame(username1, username2);
                         break;
                     case YOURTURN:
                         System.out.println("It is your turn!");
-                        Position nextMove = clientTui.determineNextMove();
-                        if (nextMove == null) {
-                            sendPass();
-                        } else {
-                            sendMove(nextMove.getRow(), nextMove.getColumn());
-                        }
+                        clientTui.setWantsToDetermineMove(true);
                         break;
                     case MOVE:
-                        int row = Integer.parseInt(split[1]);
-                        int column = Integer.parseInt(split[2]);
-                        goGame.doMove(row, column);
+                        if (split[2] != null) {
+                            int row = Integer.parseInt(split[1]);
+                            int column = Integer.parseInt(split[2]);
+                            goGame.doMove(row, column);
+                        } else {
+                            goGame.pass();
+                        }
                         break;
                     case INVALIDMOVE:
                         System.out.println("Not a valid move, try again:");
-                        nextMove = clientTui.determineNextMove();
-                        if (nextMove == null) {
-                            sendPass();
-                        } else {
-                            sendMove(nextMove.getRow(), nextMove.getColumn());
-                        }
+                        clientTui.setWantsToDetermineMove(true);
                         break;
                     case GAMEOVER:
                         if (split[1].equals(VICTORY)) {
@@ -156,14 +133,8 @@ public class Client implements Runnable {
                         } else if (split[1].equals(DISCONNECT)) {
                             System.out.println("The game is over because of disconnection. The winner is " + split[2] + ".");
                         }
-                        if (clientTui.newGame()) {
-                            sendQueue();
-                        } else {
-                            sendQuit();
-                        }
+                        clientTui.setWantsToPlayNewGame(true);
                         break;
-                    case ERROR:
-                        //
                     default:
                         System.out.println("No valid input");
                         break;
@@ -231,16 +202,6 @@ public class Client implements Runnable {
     }
 
     /**
-     * Sends the error command in the correct format to the clientHandler.
-     *
-     * @param message is the error message that explains the error
-     */
-    public synchronized void sendError(String message) {
-        String errorFormatted = Protocol.error(message);
-        writerToClientHandler.println(errorFormatted);
-    }
-
-    /**
      * Sets the username to be able to reuse this in other commands.
      *
      * @param username is the username of the player using this client
@@ -259,42 +220,46 @@ public class Client implements Runnable {
     }
 
     /**
-     * Gets the command that is received from the server via the clientHandler.
-     *
-     * @return the command that is received from the server via the clientHandler.
-     */
-    public String getCommand() {
-        return command;
-    }
-
-    public boolean isUsernameCreated() {
-        return usernameCreated;
-    }
-
-    public void setUsernameCreated(boolean usernameCreated) {
-        this.usernameCreated = usernameCreated;
-    }
-
-    /**
      * Starts a new game.
      *
      * @param username1 username of player 1
      * @param username2 username of player 2
      */
     public void startNewGame(String username1, String username2) {
+        // creates a humanPlayer or computerPlayer on the scanner input thread.
+        clientTui.setWantsToCreatePlayerType(true);
+        while (clientTui.getWantsToCreatePlayerType()) {
+            clientTui.setWantsToDetermineMove(false);
+        }
         System.out.println("A new game is started. " + username1 + " is playing against " + username2 + ".");
         System.out.println(username1 + " is BLACK, " + username2 + " is WHITE.");
-        Stone stone;
         // create new player with stone input based on username and being player 1 (black) or player 2 (white).
         if (getUsername().equals(username1)) {
             stone = Stone.BLACK;
         } else {
             stone = Stone.WHITE;
         }
-        // creates a humanPlayer or computerPlayer on the scanner input thread.
-        clientTui.createPlayerType(getUsername(), stone);
         // create a new game to be able to have a board and keep track of all moves on the client side.
-        goGame = new Game(new Player(username1, Stone.BLACK), new Player(username2, Stone.WHITE), new Board());
+        goGame = new Game(new Player(username1, Stone.BLACK), new Player(username2, Stone.WHITE), new Board(), new GoGUI(Board.SIZE));
+        goGame.createEmptyPositionSet();
+    }
+
+    /**
+     * Gets the stone type assigned to the player using this client.
+     *
+     * @return the stone, which is either black or white
+     */
+    public Stone getStone() {
+        return stone;
+    }
+
+    /**
+     * Get the game in the current state.
+     *
+     * @return the game in its current state
+     */
+    public Game getGoGame() {
+        return goGame;
     }
 }
 
