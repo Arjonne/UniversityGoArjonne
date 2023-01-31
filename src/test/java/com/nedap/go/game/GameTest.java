@@ -20,7 +20,8 @@ public class GameTest {
         playerBlack = new Player("Black", Stone.BLACK);
         playerWhite = new Player("White", Stone.WHITE);
         board = new Board();
-        game = new Game(playerBlack, playerWhite, board);
+        GoGUI goGUI = new GoGUI(Board.SIZE);
+        game = new Game(playerBlack, playerWhite, board, goGUI);
     }
 
     /**
@@ -306,8 +307,8 @@ public class GameTest {
         assertEquals(finalScoreWhite, 24);
 
         // In this case, playerWhite should be the winner of the game:
-        assertEquals(game.getWinner(), playerWhite);
-        assertNotEquals(game.getWinner(), playerBlack);
+        assertEquals(game.getWinner(), playerWhite.getUsername());
+        assertNotEquals(game.getWinner(), playerBlack.getUsername());
         assertNotEquals(game.getWinner(), null);
     }
 }
