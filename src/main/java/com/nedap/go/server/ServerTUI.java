@@ -10,8 +10,6 @@ import java.util.Scanner;
  */
 public class ServerTUI {
     public static void main(String[] args) {
-        //TODO add server address too here.
-
         // let the server know on which port you want to start a new server
         System.out.println("Import a port number between 1 and 65535. Import 0 for a random available port.");
         Scanner scanner = new Scanner(System.in);

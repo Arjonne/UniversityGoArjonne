@@ -13,25 +13,24 @@ import java.util.Queue;
  */
 public class Server implements Runnable {
     //TODO check what needs to be global and what is a local variable!
-    private int port;
-    private InetAddress address;
+    private final int port;
     private ServerSocket serverSocket;
     private Thread socketThread;
     private Thread gameThread;
     private boolean isOpen;
-    private List<ClientHandler> handlers;
-    private List<String> usernames;
-    private Queue<ClientHandler> waitingQueue;
+    private final List<ClientHandler> handlers;
+    private final List<String> usernames;
+    private final Queue<ClientHandler> waitingQueue;
+
+    // Methods needed to start and stop the ability to connect to the server:
 
     /**
      * Creates the server to be able to play the game.
      *
      * @param port is the port number that is needed to be able to connect to the server
      */
-    //TODO probably add server address too here.
     public Server(int port, InetAddress address) {
         this.port = port;
-        this.address = address;
         // a new list is created that stores all clientsHandlers that are created to be able to communicate to clients:
         this.handlers = new ArrayList<>();
         // a new list is created that stores all usernames to be able to avoid double use of the same username:
@@ -136,7 +135,7 @@ public class Server implements Runnable {
             while (!serverSocket.isClosed()) {
                 Socket socket = serverSocket.accept();
                 ClientHandler clientHandler = new ClientHandler(socket, this);
-                addClient(clientHandler);
+                addClientHandler(clientHandler);
                 //todo: check of dit zo werkt...: create new thread for each game that is being played.
 //                if (clientHandler.createNewGame()) {
 //                    gameThread = new Thread();
@@ -148,22 +147,47 @@ public class Server implements Runnable {
         }
     }
 
+    // Methods to add and remove clientHandler of connected client to a list to keep track of all connections:
+
     /**
      * Adds the clientHandler of a newly connected client to the list of connected clientHandlers.
      *
-     * @param clientHandler is the new clientHandler of the newly connected client
+     * @param clientHandler is the new clientHandler of the newly connected client.
      */
-    public synchronized void addClient(ClientHandler clientHandler) {
+    public synchronized void addClientHandler(ClientHandler clientHandler) {
         handlers.add(clientHandler);
     }
 
     /**
      * Removes the clientHandler from the list of connected clientHandlers when the connection with the Client is closed.
      *
-     * @param clientHandler is the clientHandler of the closed connection with the client
+     * @param clientHandler is the clientHandler of the closed connection with the client.
      */
-    public synchronized void removeClient(ClientHandler clientHandler) {
+    public synchronized void removeClientHandler(ClientHandler clientHandler) {
         handlers.remove(clientHandler);
+    }
+
+    // Methods to add, remove and get all usernames of players using clients connected via clientHandlers to this
+    // server:
+
+    /**
+     * Adds the username of a newly connected client to the list of connected clients (players).
+     *
+     * @param username is the username this client (player) uses.
+     */
+    public synchronized void addUsername(String username) {
+        if (!usernames.contains(username)) {
+            usernames.add(username);
+        }
+    }
+
+    /**
+     * Removes the username from the list of connected clients when the connection with this Client is closed.
+     *
+     * @param username is the username of client that has ended the connection.
+     */
+    public synchronized void removeUsername(String username) {
+        usernames.remove(username);
     }
 
     /**
@@ -175,50 +199,33 @@ public class Server implements Runnable {
         return usernames;
     }
 
-    /**
-     * Adds the username of a newly connected client to the list of connected clients (players).
-     *
-     * @param username is the username this client (player) uses
-     */
-    public synchronized void addUsername(String username) {
-        if (!usernames.contains(username)) {
-            usernames.add(username);
-        }
-    }
-
-    /**
-     * Removes the username from the list of connected clients when the connection with this Client is closed.
-     *
-     * @param username is the username of client that has ended the connection
-     */
-    public synchronized void removeUsername(String username) {
-        usernames.remove(username);
-    }
-
-    /**
-     * Gets the queue in which clients are waiting to play a GO game.
-     *
-     * @return the queue with waiting clients for playing a GO game
-     */
-    public Queue<ClientHandler> getWaitingQueue() {
-        return waitingQueue;
-    }
+    // Methods to add, remove and get all clientHandlers of players using clients connected via these clientHandlers
+    // to the queue to be able to wait for playing a game:
 
     /**
      * Adds the client to the queue to wait for another client to be able to play a GO game.
      *
-     * @param clientHandler is the clientHandler of the client that enters the queue
+     * @param clientHandler is the clientHandler of the client that enters the queue.
      */
     public synchronized void addToQueue(ClientHandler clientHandler) {
         waitingQueue.add(clientHandler);
     }
 
     /**
-     * Removes the client from the queue to wait for another client to be able to play a GO game.
+     * Removes the client from the queue (which thus stops waiting for another client to be able to play a GO game).
      *
-     * @param clientHandler is the clientHandler of the client that leaves the queue
+     * @param clientHandler is the clientHandler of the client that leaves the queue.
      */
     public synchronized void removeFromQueue(ClientHandler clientHandler) {
         waitingQueue.remove(clientHandler);
+    }
+
+    /**
+     * Gets the queue in which clients connecting via clientHandlers to this server are waiting to play a GO game.
+     *
+     * @return the queue with waiting clients for playing a GO game.
+     */
+    public Queue<ClientHandler> getWaitingQueue() {
+        return waitingQueue;
     }
 }
