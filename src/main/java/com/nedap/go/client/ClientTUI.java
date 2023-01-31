@@ -1,10 +1,8 @@
 package com.nedap.go.client;
 
-import com.nedap.go.game.ComputerPlayer;
-import com.nedap.go.game.Player;
-import com.nedap.go.game.Position;
-import com.nedap.go.game.Stone;
+import com.nedap.go.game.*;
 
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.InputMismatchException;
@@ -18,8 +16,18 @@ public class ClientTUI {
     private Scanner scanner;
     private Client client;
     private Player playerType;
-    private boolean hasReceivedWelcome = false;
-
+    private Player humanPlayer;
+    private ComputerPlayer computerPlayer;
+    private String input;
+    private Position nextMove;
+    private boolean usernameCanBeCreated = false;
+    private boolean usernameIsTaken = false;
+    private boolean wantsToEnterQueue = false;
+    private boolean wantsToLeaveQueue = false;
+    private boolean wantsToCreatePlayerType = false;
+    private boolean wantsToDetermineMove = false;
+    private boolean wantsToPlayNewGame = false;
+    private boolean quit;
 
     public ClientTUI() {
     }
@@ -41,30 +49,32 @@ public class ClientTUI {
                 scanner.nextLine();
                 client = new Client(this);
                 // try to connect the client to the server. If connection is established, the handshake will
-                // automatically start. Then, all input will be processed by the run() methods of the client thread:
+                // automatically start. Then, all input from the server that is received via the clientHandler will
+                // be processed by the run() methods of the client thread:
                 if (client.connect(address, port)) {
                     client.sendHello("Client by Arjonne");
-                    client.run();
                 }
-                boolean quit = false;
-                while (!quit) {
-                    String input = scanner.nextLine();
-                    if (input.equals("quit")) {
-                        quit = true;
-                        client.close();
-                        client.sendQuit();
+                quit = false;
+                while (!(quit || System.in.available()>0)) {
+                    if (usernameCanBeCreated || usernameIsTaken) {
+                        createUsername();
+                    } else if (wantsToEnterQueue) {
+                        enterQueue();
+//                    } else if (wantsToLeaveQueue) {
+//                        leaveQueue();
+                    } else if (wantsToCreatePlayerType) {
+                        createPlayerType(client.getUsername(), client.getStone());
+                    } else if (wantsToDetermineMove) {
+                        determineNextMove();
+                    } else if (wantsToPlayNewGame) {
+                        newGame();
                     }
-//                    if (isHasReceivedWelcome()) {
-//                        String username = createUsername();
-//                        client.setUsername(username);
-//                        client.setUsernameCreated(true);
-//                    }
-
-
                 }
                 // handle exception when port number input was not a number and try again from the beginning:
             } catch (InputMismatchException e) {
                 System.out.println("No valid input: port number should be between 1 and 65535; use 0 for a random available port.");
+            } catch (IOException e) {
+                System.out.println("Not possible.");
             }
             // handle exception when connection could not be established as address or port were not correct and try
             // again from the beginning:
@@ -73,89 +83,193 @@ public class ClientTUI {
         }
     }
 
-    public boolean isHasReceivedWelcome() {
-        return hasReceivedWelcome;
+    /**
+     * Changes the boolean to be able to know whether the username should be created now.
+     *
+     * @param usernameCanBeCreated is the boolean that represents whether a username can be created or not.
+     */
+    public void setUsernameCanBeCreated(boolean usernameCanBeCreated) {
+        this.usernameCanBeCreated = usernameCanBeCreated;
     }
 
-    public void setHasReceivedWelcome(boolean hasReceivedWelcome) {
-        this.hasReceivedWelcome = hasReceivedWelcome;
+    /**
+     * Changes the boolean to be able to know whether the username is already taken and should be created again.
+     *
+     * @param usernameIsTaken is the boolean that represents whether a username must be recreated or not.
+     */
+    public void setUsernameIsTaken(boolean usernameIsTaken) {
+        this.usernameIsTaken = usernameIsTaken;
+    }
+
+    /**
+     * Changes the boolean to be able to know whether the player using this client wants to enter the queue for playing a GO game.
+     *
+     * @param wantsToEnterQueue is the boolean that represents whether the player using this client wants to enter the queue.
+     */
+    public void setWantsToEnterQueue(boolean wantsToEnterQueue) {
+        this.wantsToEnterQueue = wantsToEnterQueue;
+    }
+
+    /**
+     * Changes the boolean to be able to know whether the player using this client wants to leave the queue for playing a GO game.
+     *
+     * @param wantsToLeaveQueue is the boolean that represents whether the player using this client wants to leave the queue.
+     */
+    public void setWantsToLeaveQueue(boolean wantsToLeaveQueue) {
+        this.wantsToLeaveQueue = wantsToLeaveQueue;
+    }
+
+    /**
+     * Changes the boolean to be able to know whether the player using this client wants to create a player type for playing a GO game.
+     *
+     * @param wantsToCreatePlayerType is the boolean that represents whether the player using this client wants to create a player type.
+     */
+    public void setWantsToCreatePlayerType(boolean wantsToCreatePlayerType) {
+        this.wantsToCreatePlayerType = wantsToCreatePlayerType;
+    }
+
+    /**
+     * Gets the boolean to be able to know whether the boolean for creating the player type is already set to true.
+     */
+    public boolean getWantsToCreatePlayerType() {
+        return wantsToCreatePlayerType;
+    }
+
+    /**
+     * Changes the boolean to be able to know whether the player using this client wants to determine the move for this GO game.
+     *
+     * @param wantsToDetermineMove is the boolean that represents whether the player using this client wants to determine a move.
+     */
+    public void setWantsToDetermineMove(boolean wantsToDetermineMove) {
+        this.wantsToDetermineMove = wantsToDetermineMove;
+    }
+
+    /**
+     * Changes the boolean to be able to know whether the player using this client wants to play a new game after one game is finished.
+     *
+     * @param wantsToPlayNewGame is the boolean that represents whether the player using this client wants to play a new game.
+     */
+    public void setWantsToPlayNewGame(boolean wantsToPlayNewGame) {
+        this.wantsToPlayNewGame = wantsToPlayNewGame;
+    }
+
+    /**
+     * Checks whether the input from the console is equal to quit.
+     */
+    public boolean checkForQuitInput() {
+        if (input.equals("quit") || input.equals("QUIT")) {
+            quit = true;
+            client.close();
+            client.sendQuit();
+            System.out.println("Disconnected");
+            return true;
+        }
+        return false;
     }
 
     /**
      * Creates a new username for the player using this client.
      */
-    public String createUsername() {
+    public void createUsername() {
         System.out.println("Enter your username:");
-        String username = scanner.nextLine();
-        while (username.contains(SEPARATOR)) {
-            System.out.println("Invalid username: it may not contain a ~. Try again:");
-            username = scanner.nextLine();
+        input = scanner.nextLine();
+        if (checkForQuitInput()) {
+            return;
         }
-        return username;
+        while (input.contains(SEPARATOR)) {
+            System.out.println("Invalid username: it may not contain a ~. Try again:");
+            input = scanner.nextLine();
+            if (checkForQuitInput()) {
+                return;
+            }
+        }
+        client.setUsername(input);
+        client.sendUsername(input);
+        usernameCanBeCreated = false;
+        usernameIsTaken = false;
     }
 
     /**
      * Player using this client enters the queue to wait for a second player.
      */
-    public boolean enterQueue() {
+    public void enterQueue() {
         System.out.println("Do you want to enter the queue and wait for a second player to play GO? Answer with YES or NO:");
-        String answer = scanner.nextLine().toUpperCase();
-        while (!(answer.equals("YES") || answer.equals("NO"))) {
-            System.out.println("Unable to understand your input. Try again:");
-            answer = scanner.nextLine().toUpperCase();
+        input = scanner.nextLine().toUpperCase();
+        if (checkForQuitInput()) {
+            return;
         }
-        if (answer.equals("YES")) {
+        while (!(input.equals("YES") || input.equals("NO"))) {
+            System.out.println("Unable to understand your input. Try again:");
+            input = scanner.nextLine().toUpperCase();
+            if (checkForQuitInput()) {
+                return;
+            }
+        }
+        if (input.equals("YES")) {
             System.out.println("You have successfully entered the queue. Waiting for a second player....");
-            return true;
+            client.sendQueue();
+            wantsToLeaveQueue = true;
         } else {
             System.out.println("The connection will be broken.");
-            return false;
+            client.sendQuit();
+            wantsToLeaveQueue = false;
+            quit = true;
         }
+        wantsToEnterQueue = false;
     }
 
-    /**
-     * Player using this client leaves the queue and stops waiting for a second player.
-     */
-    public boolean leaveQueue() {
-        while (client.getCommand().equals("JOINED")) {
-            System.out.println("Do you want to leave the queue again? Answer with YES or NO:");
-            String answer = scanner.nextLine().toUpperCase();
-            if (!(answer.equals("YES") || answer.equals("NO"))) {
-                System.out.println("Unable to understand your input. Try again:");
-                answer = scanner.nextLine().toUpperCase();
-            }
-            if (answer.equals("YES")) {
-                System.out.println("You have successfully left the queue.");
-                return true;
-            } else if (answer.equals("NO")) {
-                System.out.println("Still waiting for a second player....");
-                return false;
-            }
-        }
-        return false;
-    }
+//    /**
+//     * Player using this client leaves the queue and stops waiting for a second player.
+//     */
+//    public void leaveQueue() {
+//        System.out.println("Do you want to leave the queue again? If you want to leave, answer with YES:");
+//        input = scanner.nextLine().toUpperCase();
+//        if (checkForQuitInput()) {
+//            return;
+//        }
+//        if (!input.equals("YES")) {
+//            System.out.println("Unable to understand your input. Try again:");
+//            input = scanner.nextLine().toUpperCase();
+//            if (checkForQuitInput()) {
+//                return;
+//            }
+//        }
+//        if (input.equals("YES")) {
+//            System.out.println("You have successfully left the queue.");
+//            client.sendQueue();
+//            wantsToEnterQueue = true;
+//            wantsToLeaveQueue = false;
+//        }
+//    }
 
     /**
      * Creates a new player type, based on the input of the player using this client.
      *
      * @param username is the username of the player using this client
      */
-    public Player createPlayerType(String username, Stone stone) {
+    public void createPlayerType(String username, Stone stone) {
         System.out.println("Do you want to play a game with own input or with input defined by the computer? For own input, type OWN, for computer input, type COMPUTER:");
-        String playerType = scanner.nextLine().toUpperCase();
-        while (!(playerType.equals("OWN") || playerType.equals("COMPUTER"))) {
+        input = scanner.nextLine().toUpperCase();
+        if (checkForQuitInput()) {
+            return;
+        }
+        while (!(input.equals("OWN") || input.equals("COMPUTER"))) {
             System.out.println("Unable to understand your input. Try again:");
-            playerType = scanner.nextLine().toUpperCase();
+            input = scanner.nextLine().toUpperCase();
+            if (checkForQuitInput()) {
+                return;
+            }
         }
-        if (playerType.equals("OWN")) {
-            Player humanPlayer = new Player(username, stone);
+        if (input.equals("OWN")) {
+            humanPlayer = new Player(username, stone);
             setPlayerType(humanPlayer);
-            return humanPlayer;
+            System.out.println("Human player created. Wait for your turn.");
         } else {
-            ComputerPlayer computerPlayer = new ComputerPlayer(username, stone);
+            computerPlayer = new ComputerPlayer(username, stone);
             setPlayerType(computerPlayer);
-            return computerPlayer;
+            System.out.println("Computer player created. Wait for your turn.");
         }
+        wantsToCreatePlayerType = false;
     }
 
     /**
@@ -176,36 +290,76 @@ public class ClientTUI {
         this.playerType = playerType;
     }
 
-    /**
-     * Determines the next move the player using this client wants to make.
-     *
-     * @return the position of the next move. Can also be null (then pass)
-     */
-    public Position determineNextMove() {
-        return getPlayerType().determineMove(goGame);
-    }
 
     /**
      * Player using this client can start a new game.
-     *
-     * @return true if player using this client wants to start a new game, false if not
      */
-    public boolean newGame() {
+    public void newGame() {
         System.out.println("Do you want to play a new game? Answer with YES or NO:");
-        String answer = scanner.nextLine().toUpperCase();
-        while (!(answer.equals("YES") || answer.equals("NO"))) {
-            System.out.println("Unable to understand your input. Try again:");
-            answer = scanner.nextLine().toUpperCase();
+        input = scanner.nextLine().toUpperCase();
+        if (checkForQuitInput()) {
+            return;
         }
-        if (answer.equals("YES")) {
-            System.out.println("You have successfully entered the queue. Waiting for a second player....");
-            return true;
+        while (!(input.equals("YES") || input.equals("NO"))) {
+            System.out.println("Unable to understand your input. Try again:");
+            input = scanner.nextLine().toUpperCase();
+        }
+        if (input.equals("YES")) {
+            client.sendQueue();
         } else {
             System.out.println("The connection will be broken.");
-            return false;
+            client.sendQuit();
+            quit = true;
         }
+        wantsToPlayNewGame = false;
     }
 
+    /**
+     * Determines the next move the player using this client wants to make.
+     */
+    public void determineNextMove() {
+        if (getPlayerType() == humanPlayer) {
+            nextMove = determineMoveHumanPlayer();
+        } else {
+            nextMove = determineMoveComputerPlayer(client.getGoGame());
+        }
+        if (nextMove == null) {
+            client.sendPass();
+
+        } else {
+            client.sendMove(nextMove.getRow(), nextMove.getColumn());
+        }
+        wantsToDetermineMove = false;
+    }
+
+    public Position determineMoveHumanPlayer() {
+        System.out.println("Do you want to make a move or pass? Type either MOVE or PASS:");
+        input = scanner.nextLine().toUpperCase();
+        checkForQuitInput();
+        int row = -1;
+        int column = -1;
+        if (input.equals("PASS")) {
+            return null;
+        } else if (input.equals("MOVE")) {
+            boolean correctInput = false;
+            while (!correctInput) {
+                System.out.print("On what intersection do you want to place your stone? First, enter the row number (ranging between 1 and " + Board.SIZE + "): ");
+                try {
+                    row = (scanner.nextInt() - 1);
+                System.out.print("Now, enter the column number (ranging between 1 and " + (Board.SIZE) + "): ");
+                    column = (scanner.nextInt() - 1);
+                    correctInput = true;
+                } catch (InputMismatchException e) {
+                    System.out.println("Input must be a number between 1 and " + Board.SIZE + "!");
+                }
+            }
+        }
+        return new Position(row, column);
+    }
+
+    public Position determineMoveComputerPlayer(Game game) {
+        return game.findRandomValidPosition();
+    }
 
     public static void main(String[] args) {
         ClientTUI clientTUI = new ClientTUI();
