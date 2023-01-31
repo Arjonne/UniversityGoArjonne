@@ -17,7 +17,6 @@ public class Client implements Runnable {
     private BufferedReader inputFromClientHandler;
     private PrintWriter writerToClientHandler;
     private String username;
-    private String command;
     private Stone stone;
     private Game goGame;
 
@@ -33,6 +32,8 @@ public class Client implements Runnable {
     public static final String INVALIDMOVE = "INVALIDMOVE";
     public static final String MOVE = "MOVE";
 
+    // Methods needed to create, run and close this client:
+
     /**
      * Creates a new client via which a player can play the game.
      */
@@ -43,9 +44,9 @@ public class Client implements Runnable {
     /**
      * Connects the client to the server.
      *
-     * @param address is the network address of the server
-     * @param port    is the port number on which the server is accepting a connection for the GO game
-     * @return true if connection could be established, false if not
+     * @param address is the network address of the server;
+     * @param port    is the port number on which the server is accepting a connection for the GO game;
+     * @return true if connection could be established, false if not.
      */
     public boolean connect(InetAddress address, int port) {
         try {
@@ -78,7 +79,8 @@ public class Client implements Runnable {
     /**
      * Runs this operation. As long as the socket is not closed (= as long as the client is connected to the server),
      * the input from the server (via the clientHandler) can be processed. Input comes in from and goes back to the
-     * clientHandler via predefined format as described in the protocol.
+     * clientHandler via predefined format as described in the protocol. If input from the console is needed, the
+     * connected boolean in the clientTUI will be changed to be able to invoke methods in there.
      */
     @Override
     public void run() {
@@ -91,7 +93,7 @@ public class Client implements Runnable {
                     break;
                 }
                 String[] split = input.split(SEPARATOR);
-                command = split[0];
+                String command = split[0];
                 switch (command) {
                     case WELCOME:
                         clientTui.setUsernameCanBeCreated(true);
@@ -145,6 +147,8 @@ public class Client implements Runnable {
             }
         }
     }
+
+    // Methods needed to send the messages to the server via the clientHandler:
 
     /**
      * Sends the hello message as part of the handshake in the correct format to the clientHandler.
@@ -200,6 +204,8 @@ public class Client implements Runnable {
         String quitFormatted = Protocol.quit();
         writerToClientHandler.println(quitFormatted);
     }
+
+    // Methods needed to process information received from the server via the clientHandler:
 
     /**
      * Sets the username to be able to reuse this in other commands.

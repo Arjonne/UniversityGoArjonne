@@ -17,9 +17,9 @@ public class ClientTUI {
     private Client client;
     private Player playerType;
     private Player humanPlayer;
-    private ComputerPlayer computerPlayer;
     private String input;
-    private Position nextMove;
+    private int row;
+    private int column;
     private boolean usernameCanBeCreated = false;
     private boolean usernameIsTaken = false;
     private boolean wantsToEnterQueue = false;
@@ -29,11 +29,26 @@ public class ClientTUI {
     private boolean wantsToPlayNewGame = false;
     private boolean quit;
 
+    // Methods needed to create and run the client and this connected clientTUI:
+
+    /**
+     * Creates the clientTUI.
+     */
     public ClientTUI() {
     }
 
+    public static void main(String[] args) {
+        ClientTUI clientTUI = new ClientTUI();
+        clientTUI.go();
+    }
+
     /**
-     *
+     * Connects the client to the server via a clientHandler, and sends the initial Hello message to start the
+     * handshake to initialize the connection with the server via the clientHandler. After that, the input from the
+     * server via the clientHandler will be processed by the run() methods of the client, and the input from the
+     * console will be processed by this clientTUI. The Client has the ability to change booleans that are kept track
+     * on in this TUI, and if a boolean is changed, a methods will be called in this TUI for which input from the
+     * console is needed.
      */
     public void go() {
         // let your program ask for a server address, a server port and a username.
@@ -55,7 +70,7 @@ public class ClientTUI {
                     client.sendHello("Client by Arjonne");
                 }
                 quit = false;
-                while (!(quit || System.in.available()>0)) {
+                while (!(quit || System.in.available() > 0)) {
                     if (usernameCanBeCreated || usernameIsTaken) {
                         createUsername();
                     } else if (wantsToEnterQueue) {
@@ -83,6 +98,8 @@ public class ClientTUI {
         }
     }
 
+    // Methods that the client can use to get or set the state of a boolean in order to invoke a specific method:
+
     /**
      * Changes the boolean to be able to know whether the username should be created now.
      *
@@ -102,27 +119,33 @@ public class ClientTUI {
     }
 
     /**
-     * Changes the boolean to be able to know whether the player using this client wants to enter the queue for playing a GO game.
+     * Changes the boolean to be able to know whether the player using this client wants to enter the queue for playing
+     * a GO game.
      *
-     * @param wantsToEnterQueue is the boolean that represents whether the player using this client wants to enter the queue.
+     * @param wantsToEnterQueue is the boolean that represents whether the player using this client wants to enter the
+     *                          queue.
      */
     public void setWantsToEnterQueue(boolean wantsToEnterQueue) {
         this.wantsToEnterQueue = wantsToEnterQueue;
     }
 
     /**
-     * Changes the boolean to be able to know whether the player using this client wants to leave the queue for playing a GO game.
+     * Changes the boolean to be able to know whether the player using this client wants to leave the queue for playing
+     * a GO game.
      *
-     * @param wantsToLeaveQueue is the boolean that represents whether the player using this client wants to leave the queue.
+     * @param wantsToLeaveQueue is the boolean that represents whether the player using this client wants to leave the
+     *                          queue.
      */
     public void setWantsToLeaveQueue(boolean wantsToLeaveQueue) {
         this.wantsToLeaveQueue = wantsToLeaveQueue;
     }
 
     /**
-     * Changes the boolean to be able to know whether the player using this client wants to create a player type for playing a GO game.
+     * Changes the boolean to be able to know whether the player using this client wants to create a player type for
+     * playing a GO game.
      *
-     * @param wantsToCreatePlayerType is the boolean that represents whether the player using this client wants to create a player type.
+     * @param wantsToCreatePlayerType is the boolean that represents whether the player using this client wants to
+     *                                create a player type.
      */
     public void setWantsToCreatePlayerType(boolean wantsToCreatePlayerType) {
         this.wantsToCreatePlayerType = wantsToCreatePlayerType;
@@ -136,22 +159,28 @@ public class ClientTUI {
     }
 
     /**
-     * Changes the boolean to be able to know whether the player using this client wants to determine the move for this GO game.
+     * Changes the boolean to be able to know whether the player using this client wants to determine the move for
+     * this GO game.
      *
-     * @param wantsToDetermineMove is the boolean that represents whether the player using this client wants to determine a move.
+     * @param wantsToDetermineMove is the boolean that represents whether the player using this client wants to
+     *                             determine a move.
      */
     public void setWantsToDetermineMove(boolean wantsToDetermineMove) {
         this.wantsToDetermineMove = wantsToDetermineMove;
     }
 
     /**
-     * Changes the boolean to be able to know whether the player using this client wants to play a new game after one game is finished.
+     * Changes the boolean to be able to know whether the player using this client wants to play a new game after one
+     * game is finished.
      *
-     * @param wantsToPlayNewGame is the boolean that represents whether the player using this client wants to play a new game.
+     * @param wantsToPlayNewGame is the boolean that represents whether the player using this client wants to play a
+     *                           new game.
      */
     public void setWantsToPlayNewGame(boolean wantsToPlayNewGame) {
         this.wantsToPlayNewGame = wantsToPlayNewGame;
     }
+
+    // Methods to continuously check on "quit" input in the console to be able to quit at every possible moment.
 
     /**
      * Checks whether the input from the console is equal to quit.
@@ -166,6 +195,8 @@ public class ClientTUI {
         }
         return false;
     }
+
+    // Methods that can be called by the client by changing the state of a boolean:
 
     /**
      * Creates a new username for the player using this client.
@@ -265,7 +296,7 @@ public class ClientTUI {
             setPlayerType(humanPlayer);
             System.out.println("Human player created. Wait for your turn.");
         } else {
-            computerPlayer = new ComputerPlayer(username, stone);
+            ComputerPlayer computerPlayer = new ComputerPlayer(username, stone);
             setPlayerType(computerPlayer);
             System.out.println("Computer player created. Wait for your turn.");
         }
@@ -318,6 +349,7 @@ public class ClientTUI {
      * Determines the next move the player using this client wants to make.
      */
     public void determineNextMove() {
+        Position nextMove;
         if (getPlayerType() == humanPlayer) {
             nextMove = determineMoveHumanPlayer();
         } else {
@@ -332,12 +364,15 @@ public class ClientTUI {
         wantsToDetermineMove = false;
     }
 
+    /**
+     * Determines the next move for the human player (using input from the console).
+     *
+     * @return the position on which the player wants to place a stone. Can be null; then this player has passed.
+     */
     public Position determineMoveHumanPlayer() {
         System.out.println("Do you want to make a move or pass? Type either MOVE or PASS:");
         input = scanner.nextLine().toUpperCase();
         checkForQuitInput();
-        int row = -1;
-        int column = -1;
         if (input.equals("PASS")) {
             return null;
         } else if (input.equals("MOVE")) {
@@ -346,7 +381,7 @@ public class ClientTUI {
                 System.out.print("On what intersection do you want to place your stone? First, enter the row number (ranging between 1 and " + Board.SIZE + "): ");
                 try {
                     row = (scanner.nextInt() - 1);
-                System.out.print("Now, enter the column number (ranging between 1 and " + (Board.SIZE) + "): ");
+                    System.out.print("Now, enter the column number (ranging between 1 and " + (Board.SIZE) + "): ");
                     column = (scanner.nextInt() - 1);
                     correctInput = true;
                 } catch (InputMismatchException e) {
@@ -357,13 +392,15 @@ public class ClientTUI {
         return new Position(row, column);
     }
 
+    /**
+     * Determines the next move for the computer player (using the current game state).
+     *
+     * @param game is the game that represents the current state of the game (which is needed to correctly determine a
+     *             next valid move).
+     * @return the position on which the computer player wants to place a stone. Can be null; then this player has passed.
+     */
     public Position determineMoveComputerPlayer(Game game) {
         return game.findRandomValidPosition();
-    }
-
-    public static void main(String[] args) {
-        ClientTUI clientTUI = new ClientTUI();
-        clientTUI.go();
     }
 }
 
