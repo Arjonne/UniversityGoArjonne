@@ -18,7 +18,8 @@ public class BoardTest {
     }
 
     /**
-     * Test to check if isValidPosition() really finds the actual positions on the board (rows and columns ranging between 0 and SIZE).
+     * Test to check if isValidPosition() really finds the actual positions on the board (rows and columns ranging
+     * between 0 and SIZE).
      */
     @Test
     public void testIsValidPosition() {
@@ -29,7 +30,8 @@ public class BoardTest {
     }
 
     /**
-     * Test to check whether a stone can be placed on a position using placeStone() and to check if the correct stone is returned when using getStone().
+     * Test to check whether a stone can be placed on a position using placeStone() and to check if the correct stone
+     * is returned when using getStone().
      */
     @Test
     public void testPlaceAndGetStone() {
@@ -41,7 +43,8 @@ public class BoardTest {
     }
 
     /**
-     * Test to check whether a stone can be removed using removeStone() and check if getStone() does correctly return EMPTY after removal.
+     * Test to check whether a stone can be removed using removeStone() and check if getStone() does correctly return
+     * EMPTY after removal.
      */
     @Test
     public void testRemoveAndGetStone() {
@@ -72,7 +75,8 @@ public class BoardTest {
     }
 
     /**
-     * Test to check whether isEmptyPosition() returns true if no stone is placed on that position, and false if there is a stone on that position.
+     * Test to check whether isEmptyPosition() returns true if no stone is placed on that position, and false if there
+     * is a stone on that position.
      */
     @Test
     public void testIsEmptyPosition() {
@@ -82,8 +86,8 @@ public class BoardTest {
     }
 
     /**
-     * Test to check whether isFull() returns false if at least one position on the board is still EMPTY, and true if all positions
-     * are filled with either BLACK or WHITE stones.
+     * Test to check whether isFull() returns false if at least one position on the board is still EMPTY, and true if
+     * all positions are filled with either BLACK or WHITE stones.
      */
     @Test
     public void testIsFull() {
@@ -101,7 +105,7 @@ public class BoardTest {
     }
 
     /**
-     * Test to check whether toString correctly
+     * Test to check whether toString correctly.
      */
     @Test
     public void testToString() {
@@ -126,7 +130,7 @@ public class BoardTest {
     }
 
     /**
-     * Test to see whether the board is correctly printed and represents the placed stones
+     * Test to see whether the board is correctly printed and represents the placed stones.
      */
     @Test
     public void testPrintBoard() {
