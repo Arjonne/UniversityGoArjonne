@@ -1,7 +1,4 @@
 package com.nedap.go.game;
-
-import javafx.geometry.Pos;
-
 import java.util.InputMismatchException;
 import java.util.Scanner;
 
@@ -56,7 +53,7 @@ public class Player {
         int row = -1;
         int column = -1;
         if (input.nextLine().toUpperCase().equals("PASS")) {
-            game.pass();
+            return null;
         } else if (input.nextLine().toUpperCase().equals("MOVE")) {
             System.out.println("On what intersection do you want to place your stone?");
             boolean correctInput = false;

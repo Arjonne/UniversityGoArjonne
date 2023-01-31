@@ -1,8 +1,5 @@
 package com.nedap.go.game;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * Represents the computer player of the GO game.
  * This player has a name and has a stone (either black or white), and also a methods to determine a next move.
@@ -24,13 +21,10 @@ public class ComputerPlayer extends Player {
      * Determines the next move this player will make.
      *
      * @param game is the game this player is playing
-     * @return the move this player can make. If no valid move is available, return null and pass
+     * @return the move this player can make. If no valid move is available, return null
      */
     @Override
     public Position determineMove(Game game) {
-        if (game.findRandomValidPosition() == null) {
-            game.pass();
-        }
-            return game.findRandomValidPosition();
+        return game.findRandomValidPosition();
     }
 }
