@@ -7,7 +7,8 @@ public class GoGUI {
 
     /**
      * Creates the GUI of the go board.
-     * @param boardSize is the predefined size of the board
+     *
+     * @param boardSize is the predefined size of the board.
      */
     public GoGUI(int boardSize) {
         gogui = new GoGuiIntegrator(true, true, boardSize);
@@ -18,9 +19,9 @@ public class GoGUI {
     /**
      * Places a stone on the GUI board.
      *
-     * @param row is the row on which the stone is placed
-     * @param column is the column on which the stone is placed
-     * @param stone is the stone type that is placed
+     * @param row    is the row on which the stone is placed;
+     * @param column is the column on which the stone is placed;
+     * @param stone  is the stone type that is placed.
      */
     public void placeStone(int row, int column, Stone stone) {
         if (stone == Stone.BLACK) {
@@ -33,8 +34,8 @@ public class GoGUI {
     /**
      * Removes a stone from the GUI board.
      *
-     * @param row is the row on which a stone is removed
-     * @param column is the column on which a stone is removed
+     * @param row    is the row on which a stone is removed;
+     * @param column is the column on which a stone is removed.
      */
     public void removeStone(int row, int column) {
         gogui.removeStone(row, column);
