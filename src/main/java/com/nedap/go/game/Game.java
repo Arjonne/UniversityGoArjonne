@@ -10,6 +10,7 @@ public class Game {
     private Player playerBlack;
     private Player playerWhite;
     private Board board;
+    private GoGUI goGUI;
     private Player currentPlayer;
     private static int passCount; // probably static, but check if it works when game is finished!
     private List<String> listPreviousBoards;
@@ -23,10 +24,11 @@ public class Game {
      * @param playerWhite player with white stones
      * @param board       the game board
      */
-    public Game(Player playerBlack, Player playerWhite, Board board) {
+    public Game(Player playerBlack, Player playerWhite, Board board, GoGUI goGUI) {
         this.playerBlack = playerBlack;
         this.playerWhite = playerWhite;
         this.board = board;
+        this.goGUI = goGUI;
         // as Black always starts the game, this player is assigned to currentPlayer in the constructor
         currentPlayer = playerBlack;
         // each game starts with a pass count of 0 (after two consecutive passes, the game is over)
@@ -154,7 +156,7 @@ public class Game {
     /**
      * Finds a valid position based on a random empty position on the board that does not violate the ko rule.
      *
-     * @return the position of the random valid move
+     * @return the position of the random valid move. Can be null if no valid position is available.
      */
     public Position findRandomValidPosition() {
         // to be able to find a random valid position, the game must not be over yet, and the list of valid positions
@@ -213,7 +215,7 @@ public class Game {
         // state of the board with all previous states
         for (String stringRepresentationPreviousBoardStates : listPreviousBoards) {
             if (stringRepresentationPreviousBoardStates.equals(stringRepresentationOfBoard)) {
-                System.out.println("Violation of the ko rule: a stone that will recreate a former board position may not be placed)!");
+                System.out.println("Violation of the ko rule: a stone that will recreate a former board position may not be placed!");
                 return true;
             }
         }
@@ -437,10 +439,11 @@ public class Game {
      * @return the number of captured positions
      */
     public int scoreBasedOnCapturedPositions(Set<Position> emptyPositions, Player player) {
+        //TODO check overlap with getCapturedGroup()!!!
+
         // create a new set to be able to store all empty positions that are captured by a player (use a set to prevent
         // storing the same position twice).
         Set<Position> positionsOfCaptures = new HashSet<>();
-
         // create a new queue with all empty positions to be able to remove checked positions and prevent double-checking.
         Queue<Position> emptyPositionsQueue = new LinkedList<>(emptyPositions);
         // check all positions in the queue and check whether this position is captured, or part of a group of empty
@@ -457,8 +460,8 @@ public class Game {
             if (!checkedGroup.isEmpty()) {
                 positionsOfCaptures.addAll(checkedGroup);
                 for (Position checkedPosition : checkedGroup) {
-                    if (emptyPositions.contains(checkedPosition)) {
-                        emptyPositions.remove(checkedPosition);
+                    if (emptyPositionsQueue.contains(checkedPosition)) {
+                        emptyPositionsQueue.remove(checkedPosition);
                     }
                 }
             }
@@ -476,6 +479,7 @@ public class Game {
      */
     public void removeStone(int row, int column) {
         board.removeStone(row, column);
+        goGUI.removeStone(row, column);
     }
 
     /**
@@ -499,6 +503,7 @@ public class Game {
     public void doMove(int row, int column) {
         if (isValidMove(row, column)) {
             board.placeStone(row, column, getStone(currentPlayer));
+            goGUI.placeStone(row, column, getStone(currentPlayer));
             // hasCaptured checked before isCaptured, as a suicide move resulting in capturing a group is allowed:
             removeIfHasCaptured(row, column);
             removeIfIsCaptured(row, column);
@@ -600,7 +605,8 @@ public class Game {
     public int finalScore(Player player) {
         int stonesOnBoard = getNumberOfStones(player, board.toString());
         int capturedPositions = getFinalCapturedPositions(player);
-        return stonesOnBoard + capturedPositions;
+        int finalScore = stonesOnBoard + capturedPositions;
+        return finalScore;
     }
 
     /**
@@ -608,11 +614,11 @@ public class Game {
      *
      * @return the player with the most points; can be null if the game ended in a draw
      */
-    public Player getWinner() {
+    public String getWinner() {
         if (finalScore(playerBlack) > finalScore(playerWhite)) {
-            return playerBlack;
+            return playerBlack.getUsername();
         } else if (finalScore(playerBlack) < finalScore(playerWhite)) {
-            return playerWhite;
+            return playerWhite.getUsername();
         } else {
             System.out.println("This game ended in a draw!");
             return null;
