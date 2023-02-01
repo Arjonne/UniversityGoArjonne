@@ -7,14 +7,14 @@ import java.util.*;
  */
 
 public class Game {
-    private final Player playerBlack;
-    private final Player playerWhite;
-    private final Board board;
-    private final GoGUI goGUI;
+    private Player playerBlack;
+    private Player playerWhite;
+    private Board board;
+    private GoGUI goGUI;
     private Player currentPlayer;
     private static int passCount; //todo probably static, but check if it works when game is finished!
-    private final List<String> listPreviousBoards;
-    private final Set<Position> emptyPositions;
+    private List<String> listPreviousBoards;
+    private Set<Position> emptyPositions;
 
     /**
      * Creates a new game with two players, a board and the GUI representation of the board.
@@ -35,8 +35,9 @@ public class Game {
         // create a list to store all previous states of the board (which are represented as a String) to be able to
         // check the ko rule
         listPreviousBoards = new ArrayList<>();
-        // create a new set to keep track of all empty positions on the board
-        emptyPositions = new HashSet<>();
+        // create a new set to keep track of all empty positions on the board. As all positions are empty at the start
+        // of the game, all positions are added to this set by creating it.
+        createEmptyPositionSet();
     }
 
     // Getters:
@@ -98,6 +99,7 @@ public class Game {
      * the game, all positions are added to this set by creating it.
      */
     public void createEmptyPositionSet() {
+        emptyPositions = new HashSet<>();
         for (int row = 0; row < Board.SIZE; row++) {
             for (int column = 0; column < Board.SIZE; column++) {
                 Position position = new Position(row, column);

@@ -146,7 +146,7 @@ public final class Protocol {
      * @return the pass message in the correct format
      */
     public static String pass(String username) {
-        return MOVE + username + PASS;
+        return MOVE + SEPARATOR + username + SEPARATOR + PASS;
     }
 
     /**

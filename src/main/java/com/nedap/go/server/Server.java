@@ -16,7 +16,6 @@ public class Server implements Runnable {
     private final int port;
     private ServerSocket serverSocket;
     private Thread socketThread;
-    private Thread gameThread;
     private boolean isOpen;
     private final List<ClientHandler> handlers;
     private final List<String> usernames;
@@ -136,11 +135,6 @@ public class Server implements Runnable {
                 Socket socket = serverSocket.accept();
                 ClientHandler clientHandler = new ClientHandler(socket, this);
                 addClientHandler(clientHandler);
-                //todo: check of dit zo werkt...: create new thread for each game that is being played.
-//                if (clientHandler.createNewGame()) {
-//                    gameThread = new Thread();
-//                    gameThread.start();
-//                }
             }
         } catch (IOException e) {
             System.out.println("Not able to make a connection between server and client via clientHandler OR server is just closed.");

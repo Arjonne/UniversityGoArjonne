@@ -107,7 +107,6 @@ public class Client implements Runnable {
                         break;
                     case NEWGAME:
                         clientTui.setWantsToEnterQueue(false);
-                        clientTui.setWantsToLeaveQueue(false);
                         String username1 = split[1];
                         String username2 = split[2];
                         startNewGame(username1, username2);
@@ -117,12 +116,14 @@ public class Client implements Runnable {
                         clientTui.setWantsToDetermineMove(true);
                         break;
                     case MOVE:
-                        if (split[2] != null) {
-                            int row = Integer.parseInt(split[1]);
-                            int column = Integer.parseInt(split[2]);
-                            goGame.doMove(row, column);
-                        } else {
+                        if (split[2].equals("PASS")) {
+                            System.out.println(split[1] + " passed.");
                             goGame.pass();
+                        } else {
+                            System.out.println(split[1] + " placed a stone on row " + split[2] + " and column " + split[3] +".");
+                            int row = Integer.parseInt(split[2]);
+                            int column = Integer.parseInt(split[3]);
+                            goGame.doMove(row, column);
                         }
                         break;
                     case INVALIDMOVE:
@@ -235,6 +236,11 @@ public class Client implements Runnable {
         // creates a humanPlayer or computerPlayer on the scanner input thread.
         clientTui.setWantsToCreatePlayerType(true);
         while (clientTui.getWantsToCreatePlayerType()) {
+            try {
+                Thread.sleep(200);
+            } catch (InterruptedException e) {
+                System.out.println("Not able to sleep for 2 seconds due to interruption.");
+            }
             clientTui.setWantsToDetermineMove(false);
         }
         System.out.println("A new game is started. " + username1 + " is playing against " + username2 + ".");
@@ -247,7 +253,6 @@ public class Client implements Runnable {
         }
         // create a new game to be able to have a board and keep track of all moves on the client side.
         goGame = new Game(new Player(username1, Stone.BLACK), new Player(username2, Stone.WHITE), new Board(), new GoGUI(Board.SIZE));
-        goGame.createEmptyPositionSet();
     }
 
     /**

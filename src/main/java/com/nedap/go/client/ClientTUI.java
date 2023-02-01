@@ -23,7 +23,6 @@ public class ClientTUI {
     private boolean usernameCanBeCreated = false;
     private boolean usernameIsTaken = false;
     private boolean wantsToEnterQueue = false;
-    private boolean wantsToLeaveQueue = false;
     private boolean wantsToCreatePlayerType = false;
     private boolean wantsToDetermineMove = false;
     private boolean wantsToPlayNewGame = false;
@@ -75,8 +74,6 @@ public class ClientTUI {
                         createUsername();
                     } else if (wantsToEnterQueue) {
                         enterQueue();
-//                    } else if (wantsToLeaveQueue) {
-//                        leaveQueue();
                     } else if (wantsToCreatePlayerType) {
                         createPlayerType(client.getUsername(), client.getStone());
                     } else if (wantsToDetermineMove) {
@@ -127,17 +124,6 @@ public class ClientTUI {
      */
     public void setWantsToEnterQueue(boolean wantsToEnterQueue) {
         this.wantsToEnterQueue = wantsToEnterQueue;
-    }
-
-    /**
-     * Changes the boolean to be able to know whether the player using this client wants to leave the queue for playing
-     * a GO game.
-     *
-     * @param wantsToLeaveQueue is the boolean that represents whether the player using this client wants to leave the
-     *                          queue.
-     */
-    public void setWantsToLeaveQueue(boolean wantsToLeaveQueue) {
-        this.wantsToLeaveQueue = wantsToLeaveQueue;
     }
 
     /**
@@ -239,39 +225,13 @@ public class ClientTUI {
         if (input.equals("YES")) {
             System.out.println("You have successfully entered the queue. Waiting for a second player....");
             client.sendQueue();
-            wantsToLeaveQueue = true;
         } else {
             System.out.println("The connection will be broken.");
             client.sendQuit();
-            wantsToLeaveQueue = false;
             quit = true;
         }
         wantsToEnterQueue = false;
     }
-
-//    /**
-//     * Player using this client leaves the queue and stops waiting for a second player.
-//     */
-//    public void leaveQueue() {
-//        System.out.println("Do you want to leave the queue again? If you want to leave, answer with YES:");
-//        input = scanner.nextLine().toUpperCase();
-//        if (checkForQuitInput()) {
-//            return;
-//        }
-//        if (!input.equals("YES")) {
-//            System.out.println("Unable to understand your input. Try again:");
-//            input = scanner.nextLine().toUpperCase();
-//            if (checkForQuitInput()) {
-//                return;
-//            }
-//        }
-//        if (input.equals("YES")) {
-//            System.out.println("You have successfully left the queue.");
-//            client.sendQueue();
-//            wantsToEnterQueue = true;
-//            wantsToLeaveQueue = false;
-//        }
-//    }
 
     /**
      * Creates a new player type, based on the input of the player using this client.
@@ -334,6 +294,9 @@ public class ClientTUI {
         while (!(input.equals("YES") || input.equals("NO"))) {
             System.out.println("Unable to understand your input. Try again:");
             input = scanner.nextLine().toUpperCase();
+            if (checkForQuitInput()) {
+                return;
+            }
         }
         if (input.equals("YES")) {
             client.sendQueue();
@@ -372,7 +335,9 @@ public class ClientTUI {
     public Position determineMoveHumanPlayer() {
         System.out.println("Do you want to make a move or pass? Type either MOVE or PASS:");
         input = scanner.nextLine().toUpperCase();
-        checkForQuitInput();
+        if (checkForQuitInput()) {
+            return null;
+        }
         if (input.equals("PASS")) {
             return null;
         } else if (input.equals("MOVE")) {
