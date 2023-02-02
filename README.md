@@ -1,13 +1,15 @@
 # Go Game
-Starting point for the Go game
+Starting point for playing the Go game of Arjonne
 
 * Usage of Java 19 is required
-* Clone (with Git) or download this project to your PC
-* Make a public personal repository on your GitHub account
-* Push with Git the initial project and your progress to your personal repository (on master)
-* Use meaningful Git commits (and branching) to organize your work (commit early, commit often)
-* Import the code style from the src/main/resources directory
 * Use Maven to build the project (or use your IDE)
-* Run the application using the commandline or IDE: 
-  * `mvn exec:java -Dexec.mainClass="com.nedap.go.Go"`. 
-  * In your IDE look for the Go.java
+* The ClientTUI can be used to start running the client. To be able to do so, the following packages are needed:
+  * client, including all classes;
+  * game, including all classes;
+  * gui, including all classes;
+  * the Protocol class.
+* The ServerTUI can be used to start running the server. To be able to do so, the following packages are needed:
+  * server, including all classes;
+  * game, including all classes;
+  * gui, including all classes;
+  * the Protocol class.
