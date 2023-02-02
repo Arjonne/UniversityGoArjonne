@@ -12,7 +12,7 @@ public class Game {
     private Board board;
     private GoGUI goGUI;
     private Player currentPlayer;
-    private static int passCount; //todo probably static, but check if it works when game is finished!
+    private int passCount;
     private List<String> listPreviousBoards;
     private Set<Position> emptyPositions;
 
@@ -21,7 +21,8 @@ public class Game {
      *
      * @param playerBlack player with black stones;
      * @param playerWhite player with white stones;
-     * @param board       the game board.
+     * @param board       the game board;
+     * @param goGUI       the GUI representation of the board.
      */
     public Game(Player playerBlack, Player playerWhite, Board board, GoGUI goGUI) {
         this.playerBlack = playerBlack;
@@ -607,7 +608,7 @@ public class Game {
             return playerWhite.getUsername();
         } else {
             System.out.println("This game ended in a draw!");
-            return null;
+            return "none";
         }
     }
 }

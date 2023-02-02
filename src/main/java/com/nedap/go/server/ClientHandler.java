@@ -7,8 +7,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Represents a clientHandler of the server for a connected client.
@@ -19,22 +17,13 @@ public class ClientHandler implements Runnable {
     private PrintWriter writerToClient;
     private BufferedReader inputFromClient;
     private String usernameStored;
-    private static List<ClientHandler> clientHandlerList;
-    private static ClientHandler clientHandler1;
-    private static ClientHandler clientHandler2;
-    private static GoGameHandler goGameHandler;
-    private static String username1;
-    private static String username2;
     public static final String HELLO = "HELLO";
     public static final String USERNAME = "USERNAME";
     public static final String QUEUE = "QUEUE";
     public static final String MOVE = "MOVE";
     public static final String PASS = "PASS";
     public static final String QUIT = "QUIT";
-    public static final String DISCONNECT = "DISCONNECT";
-    public static final String VICTORY = "VICTORY";
     public static final String SEPARATOR = "~";
-
 
     /**
      * Creates a clientHandler to be able to handle the input from the client that is connected to the server.
@@ -108,7 +97,8 @@ public class ClientHandler implements Runnable {
                         queueCount++;
                         if (queueCount % 2 != 0) {
                             enterQueue(clientInput);
-                            sendNewGame();
+                            System.out.println(getUsername() + " has successfully entered the queue. Waiting for a second player....");
+                            server.createNewGame();
                         } else {
                             leaveQueue();
                         }
@@ -116,41 +106,15 @@ public class ClientHandler implements Runnable {
                     case MOVE:
                         int row = Integer.parseInt(split[1]);
                         int column = Integer.parseInt(split[2]);
-                        if (!goGameHandler.checkIfMoveIsValid(row, column)) {
-                            try {
-                                Thread.sleep(1000);
-                            } catch (InterruptedException e) {
-                                System.out.println("Not able to wait 10 seconds due to interruption.");
-                            }
-                            sendInvalidMove();
-                        } else {
-                            goGameHandler.doMoveOnReferenceBoard(row, column);
-                            sendMove(getUsername(), row, column);
-                            try {
-                                Thread.sleep(1000);
-                            } catch (InterruptedException e) {
-                                System.out.println("Not able to wait 10 seconds due to interruption.");
-                            }
-                            checkForGameOver();
-                        }
+                        server.getGoGameHandler(this).setWantsToCheckIfMoveIsValid(true, row, column);
                         break;
                     case PASS:
-                        goGameHandler.passInReferenceGame();
-                        sendPass(getUsername());
-                        try {
-                            Thread.sleep(1000);
-                        } catch (InterruptedException e) {
-                            System.out.println("Not able to wait 10 seconds due to interruption.");
-                        }
-                        checkForGameOver();
+                        server.getGoGameHandler(this).setWantsToPassInReferenceGame(true);
                         break;
                     case QUIT:
-                        if (getUsername().equals(username1)) {
-                            sendGameOver(DISCONNECT, username2);
-                        } else {
-                            sendGameOver(DISCONNECT, username1);
-                        }
-                        this.close();
+                        queueCount = 0;
+                        server.getGoGameHandler(this).setHasQuited(true);
+                        close();
                         break;
                     default:
                         System.out.println("The input is not correct.");
@@ -205,12 +169,10 @@ public class ClientHandler implements Runnable {
      * Sends a message to the client that a new game is started in the correct format to the clientHandler. Besides
      * that, the formatted message is visible in the server TUI.
      */
-    public void sendNewGame() {
-        if (server.getWaitingQueue().size() < 2) {
-            System.out.println(getUsername() + " has successfully entered the queue. Waiting for a second player....");
-        } else {
-            createNewGame();
-        }
+    public void sendNewGame(String username1, String username2) {
+        String messageFormatted = Protocol.newGame(username1, username2);
+        writerToClient.println(messageFormatted);
+        System.out.println(messageFormatted);
     }
 
     /**
@@ -233,9 +195,7 @@ public class ClientHandler implements Runnable {
      */
     public void sendMove(String username, int row, int column) {
         String moveFormatted = Protocol.move(username, row, column);
-        for (ClientHandler handlers : clientHandlerList) {
-            handlers.writerToClient.println(moveFormatted);
-        }
+        writerToClient.println(moveFormatted);
         System.out.println(moveFormatted);
     }
 
@@ -247,9 +207,7 @@ public class ClientHandler implements Runnable {
      */
     public void sendPass(String username) {
         String passFormatted = Protocol.pass(username);
-        for (ClientHandler handlers : clientHandlerList) {
-            handlers.writerToClient.println(passFormatted);
-        }
+        writerToClient.println(passFormatted);
         System.out.println(passFormatted);
     }
 
@@ -269,9 +227,7 @@ public class ClientHandler implements Runnable {
      */
     public void sendGameOver(String reason, String usernameWinner) {
         String gameOverFormatted = Protocol.gameOver(reason, usernameWinner);
-        for (ClientHandler handlers : clientHandlerList) {
-            handlers.writerToClient.println(gameOverFormatted);
-        }
+        writerToClient.println(gameOverFormatted);
         System.out.println(gameOverFormatted);
     }
 
@@ -329,63 +285,4 @@ public class ClientHandler implements Runnable {
         sendJoined(getUsername() + " has left the queue.");
         server.removeFromQueue(this);
     }
-
-    /**
-     * Creates a new thread for playing a game with two players. Here, the game is created as well.
-     */
-    public void createNewGame() {
-        // first, create a new list in which the clientHandlers of the two players can be stored.
-        clientHandlerList = new ArrayList<>();
-        // then, add the clientHandlers from the two clients that are in front of the queue.
-        clientHandlerList.add(server.getWaitingQueue().poll());
-        clientHandlerList.add(server.getWaitingQueue().poll());
-        clientHandler1 = clientHandlerList.get(0);
-        clientHandler2 = clientHandlerList.get(1);
-        // get the username of the two clients connected to the clientHandlers to be able to create a new game.
-        username1 = clientHandler1.getUsername();
-        username2 = clientHandler2.getUsername();
-        // send the message that a new game is started to both clients connected to the clientHandlers.
-        String messageFormatted = Protocol.newGame(username1, username2);
-        for (ClientHandler handlers : clientHandlerList) {
-            handlers.writerToClient.println(messageFormatted);
-        }
-        // put this message in the server log as well.
-        System.out.println(messageFormatted);
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            System.out.println("Not able to sleep for 10 seconds due to interruption.");
-        }
-        // create the new game in the gameHandler.
-        goGameHandler = new GoGameHandler(clientHandler1, clientHandler2);
-        goGameHandler.createNewGame();
-    }
-
-    /**
-     * Find the clientHandler of the player connected to the game whose turn it is next.
-     *
-     * @return the clientHandler that connects the player using the client whose turn it is.
-     */
-    public ClientHandler nextTurnClientHandler() {
-        if (getUsername().equals(username1)) {
-            return clientHandler2;
-        } else {
-            return clientHandler1;
-        }
-    }
-
-    /**
-     * After making a move or passing, it should be checked whether the game is over or not. If not, the player whose
-     * turn it is, should be informed; otherwise, both players should get an update that the game is over, and for what
-     * reason.
-     */
-    public void checkForGameOver() {
-        if (!goGameHandler.checkOnGameOver()) {
-            nextTurnClientHandler().sendYourTurn();
-        } else {
-            String winner = goGameHandler.getWinner();
-            sendGameOver(VICTORY, winner);
-        }
-    }
 }
-

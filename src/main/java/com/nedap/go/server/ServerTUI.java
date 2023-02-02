@@ -21,13 +21,15 @@ public class ServerTUI {
             }
             // create and start a new server with the port input from above
             Server server = new Server(port, InetAddress.getLocalHost());
+//            Server server = new Server(port, InetAddress.getByName("192.168.8.102"));
             server.start();
             System.out.println("Port number on which this server is accepting clients is: " + server.getPort());
+            System.out.println("If you want to stop the server, type QUIT.");
             // server works until quit is used. Until then, all input from clients (via clientHandlers) will be handled via
             // run() methods in the clientHandler class
             boolean quit = false;
             while (!quit) {
-                if (scanner.nextLine().equals("quit")) {
+                if (scanner.nextLine().equals("quit") || scanner.nextLine().equals("QUIT")) {
                     server.stop();
                     quit = true;
                 }

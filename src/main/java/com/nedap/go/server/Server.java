@@ -1,18 +1,15 @@
 package com.nedap.go.server;
+
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
+import java.util.*;
 
 /**
  * Represents the server that hosts the GO game.
  */
 public class Server implements Runnable {
-    //TODO check what needs to be global and what is a local variable!
     private final int port;
     private ServerSocket serverSocket;
     private Thread socketThread;
@@ -20,6 +17,7 @@ public class Server implements Runnable {
     private final List<ClientHandler> handlers;
     private final List<String> usernames;
     private final Queue<ClientHandler> waitingQueue;
+    private Map<ClientHandler, GoGameHandler> storageOfGameHandlerPerClientHandler;
 
     // Methods needed to start and stop the ability to connect to the server:
 
@@ -36,6 +34,8 @@ public class Server implements Runnable {
         this.usernames = new ArrayList<>();
         // a queue is created in which clients (players) who want to play Go can wait until a second player is available:
         this.waitingQueue = new LinkedList<>();
+        // a map is created to be able to store the gamehandler a clienthandlers is connected to:
+        this.storageOfGameHandlerPerClientHandler = new HashMap<>();
         // after creating this server, it is not opened yet:
         isOpen = false;
     }
@@ -221,5 +221,31 @@ public class Server implements Runnable {
      */
     public Queue<ClientHandler> getWaitingQueue() {
         return waitingQueue;
+    }
+
+    /**
+     * Creates a new thread for playing a game with two players. In this thread, the reference game is created as well.
+     */
+    public void createNewGame() {
+        if (waitingQueue.size() == 2) {
+            System.out.println("A new game will be created.");
+            ClientHandler clientHandler1 = getWaitingQueue().poll();
+            ClientHandler clientHandler2 = getWaitingQueue().poll();
+            // create the new game in the gameHandlerThread.
+            GoGameHandler goGameHandler = new GoGameHandler(clientHandler1, clientHandler2);
+            // save the combination of clientHandler and gameHandler in the map:
+            storageOfGameHandlerPerClientHandler.put(clientHandler1, goGameHandler);
+            storageOfGameHandlerPerClientHandler.put(clientHandler2, goGameHandler);
+            new Thread(goGameHandler).start();
+        }
+    }
+
+    /**
+     * Get the goGameHandler that a clientHandler is connected to.
+     *
+     * @return the goGameHandler of interest.
+     */
+    public GoGameHandler getGoGameHandler(ClientHandler clientHandler) {
+        return storageOfGameHandlerPerClientHandler.get(clientHandler);
     }
 }

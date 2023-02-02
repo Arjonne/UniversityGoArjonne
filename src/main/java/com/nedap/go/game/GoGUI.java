@@ -2,6 +2,9 @@ package com.nedap.go.game;
 
 import com.nedap.go.gui.GoGuiIntegrator;
 
+/**
+ * Represents the Graphical User Interface of the Go board.
+ */
 public class GoGUI {
     private final GoGuiIntegrator gogui;
 
@@ -39,12 +42,5 @@ public class GoGUI {
      */
     public void removeStone(int row, int column) {
         gogui.removeStone(row, column);
-    }
-
-    /**
-     * Clears the GUI board.
-     */
-    public void clearBoard() {
-        gogui.clearBoard();
     }
 }

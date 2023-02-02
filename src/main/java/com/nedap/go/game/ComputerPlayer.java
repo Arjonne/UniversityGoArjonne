@@ -4,7 +4,6 @@ package com.nedap.go.game;
  * Represents the computer player of the GO game. This player has a name and has a stone (either black or white),
  * and also a methods to determine a next move.
  */
-
 public class ComputerPlayer extends Player {
 
     /**

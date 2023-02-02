@@ -12,14 +12,12 @@ import java.net.Socket;
  */
 public class Client implements Runnable {
     private final ClientTUI clientTui;
-    //TODO check what needs to be global and what is a local variable!
     private Socket socket;
     private BufferedReader inputFromClientHandler;
     private PrintWriter writerToClientHandler;
     private String username;
     private Stone stone;
     private Game goGame;
-
     public static final String SEPARATOR = "~";
     public static final String WELCOME = "WELCOME";
     public static final String USERNAMETAKEN = "USERNAMETAKEN";
@@ -88,8 +86,7 @@ public class Client implements Runnable {
             try {
                 String input = inputFromClientHandler.readLine();
                 if (input == null) {
-                    close(); // ? --> deze close gaat niet goed!! Message meesturen dat'ie geclosed is zodat client
-                    // handmatig kan closen?
+                    close();
                     break;
                 }
                 String[] split = input.split(SEPARATOR);
@@ -120,10 +117,10 @@ public class Client implements Runnable {
                             System.out.println(split[1] + " passed.");
                             goGame.pass();
                         } else {
-                            System.out.println(split[1] + " placed a stone on row " + split[2] + " and column " + split[3] +".");
-                            int row = Integer.parseInt(split[2]);
-                            int column = Integer.parseInt(split[3]);
-                            goGame.doMove(row, column);
+                            int row = Integer.parseInt(split[2]) + 1;
+                            int column = Integer.parseInt(split[3]) + 1;
+                            System.out.println(split[1] + " placed a stone on row " + row + " and column " + column + ".");
+                            goGame.doMove((row - 1), (column - 1));
                         }
                         break;
                     case INVALIDMOVE:
@@ -154,7 +151,7 @@ public class Client implements Runnable {
     /**
      * Sends the hello message as part of the handshake in the correct format to the clientHandler.
      *
-     * @param clientID is the ID of the client
+     * @param clientID is the ID of the client.
      */
     public synchronized void sendHello(String clientID) {
         String clientIdFormatted = Protocol.helloMessage(clientID);
@@ -164,7 +161,7 @@ public class Client implements Runnable {
     /**
      * Sends the username message as part of the handshake in the correct format to the clientHandler.
      *
-     * @param username is the username the client want to use
+     * @param username is the username the client want to use.
      */
     public synchronized void sendUsername(String username) {
         String usernameFormatted = Protocol.username(username);
@@ -182,8 +179,8 @@ public class Client implements Runnable {
     /**
      * Sends the move command in the correct format to the clientHandler.
      *
-     * @param row    is the row of the position of the stone to place
-     * @param column is the column of the position of the stone to place
+     * @param row    is the row of the position of the stone to place;
+     * @param column is the column of the position of the stone to place.
      */
     public synchronized void sendMove(int row, int column) {
         String moveFormatted = Protocol.move(row, column);
@@ -211,7 +208,7 @@ public class Client implements Runnable {
     /**
      * Sets the username to be able to reuse this in other commands.
      *
-     * @param username is the username of the player using this client
+     * @param username is the username of the player using this client.
      */
     public void setUsername(String username) {
         this.username = username;
@@ -220,7 +217,7 @@ public class Client implements Runnable {
     /**
      * Gets the username of the player using this client.
      *
-     * @return the username of the player using this client
+     * @return the username of the player using this client.
      */
     public String getUsername() {
         return username;
@@ -229,8 +226,8 @@ public class Client implements Runnable {
     /**
      * Starts a new game.
      *
-     * @param username1 username of player 1
-     * @param username2 username of player 2
+     * @param username1 username of player 1;
+     * @param username2 username of player 2.
      */
     public void startNewGame(String username1, String username2) {
         // creates a humanPlayer or computerPlayer on the scanner input thread.
@@ -244,7 +241,7 @@ public class Client implements Runnable {
             clientTui.setWantsToDetermineMove(false);
         }
         System.out.println("A new game is started. " + username1 + " is playing against " + username2 + ".");
-        System.out.println(username1 + " is BLACK, " + username2 + " is WHITE.");
+        System.out.println(username1 + " is BLACK, " + username2 + " is WHITE. Wait for your turn.");
         // create new player with stone input based on username and being player 1 (black) or player 2 (white).
         if (getUsername().equals(username1)) {
             stone = Stone.BLACK;
@@ -258,7 +255,7 @@ public class Client implements Runnable {
     /**
      * Gets the stone type assigned to the player using this client.
      *
-     * @return the stone, which is either black or white
+     * @return the stone, which is either black or white.
      */
     public Stone getStone() {
         return stone;
@@ -267,7 +264,7 @@ public class Client implements Runnable {
     /**
      * Get the game in the current state.
      *
-     * @return the game in its current state
+     * @return the game in its current state.
      */
     public Game getGoGame() {
         return goGame;

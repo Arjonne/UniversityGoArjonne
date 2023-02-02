@@ -3,20 +3,35 @@ package com.nedap.go.game;
 /**
  * Represents the position on the board where a stone can be placed.
  */
-
 public class Position {
     private int row;
     private int column;
 
+    /**
+     * Creates a position, based on a row and column input.
+     *
+     * @param row    is the row of interest;
+     * @param column is the column of interest.
+     */
     public Position(int row, int column) {
         this.row = row;
         this.column = column;
     }
 
+    /**
+     * Gets the row of the position.
+     *
+     * @return the row of the position.
+     */
     public int getRow() {
         return row;
     }
 
+    /**
+     * Gets the column of the position.
+     *
+     * @return the column of the position.
+     */
     public int getColumn() {
         return column;
     }

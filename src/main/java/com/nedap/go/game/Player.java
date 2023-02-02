@@ -1,4 +1,5 @@
 package com.nedap.go.game;
+
 import java.util.InputMismatchException;
 import java.util.Scanner;
 
@@ -7,7 +8,6 @@ import java.util.Scanner;
  * computer player or two computer players. Each This player has a name and has a stone (either black or white), and
  * also a methods to determine a next move.
  */
-
 public class Player {
     private final String username;
     private final Stone stone;

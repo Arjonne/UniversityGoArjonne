@@ -15,7 +15,6 @@ public class Go {
 		gogui.startGUI();
 		gogui.setBoardSize(boardSize);
 	}
-
 	public void testBoard() {
 		gogui.addStone(0, 0, false);
 		gogui.addStone(0, 2, true);

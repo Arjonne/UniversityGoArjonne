@@ -1,9 +1,19 @@
 package com.nedap.go;
 
+/**
+ * Represents the communication protocol between the server and the clients.
+ */
 public final class Protocol {
+
+    /**
+     * Creates the protocol.
+     */
     private Protocol() {
     }
 
+    /**
+     * Creates all predefined commands.
+     */
     public static final String SEPARATOR = "~";
     // Server-side
     public static final String WELCOME = "WELCOME";
@@ -167,6 +177,12 @@ public final class Protocol {
         return QUIT;
     }
 
+
+    /**
+     * Builds a new protocol message which instructs the client that a game is over.
+     *
+     * @return the message in the correct format
+     */
     public static String gameOver(String reason, String usernameWinner) {
         if (reason.equals(DISCONNECT)) {
             return GAMEOVER + SEPARATOR + DISCONNECT + SEPARATOR + usernameWinner;
@@ -175,6 +191,11 @@ public final class Protocol {
         }
     }
 
+    /**
+     * Builds a new protocol message which instructs the client or server that an error occured.
+     *
+     * @return the message in the correct format
+     */
     public static String error(String message) {
         return ERROR + SEPARATOR + message;
     }

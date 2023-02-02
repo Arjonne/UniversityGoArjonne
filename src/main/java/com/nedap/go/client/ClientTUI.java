@@ -20,12 +20,12 @@ public class ClientTUI {
     private String input;
     private int row;
     private int column;
-    private boolean usernameCanBeCreated = false;
-    private boolean usernameIsTaken = false;
-    private boolean wantsToEnterQueue = false;
-    private boolean wantsToCreatePlayerType = false;
-    private boolean wantsToDetermineMove = false;
-    private boolean wantsToPlayNewGame = false;
+    private boolean usernameCanBeCreated;
+    private boolean usernameIsTaken;
+    private boolean wantsToEnterQueue;
+    private boolean wantsToCreatePlayerType;
+    private boolean wantsToDetermineMove;
+    private boolean wantsToPlayNewGame;
     private boolean quit;
 
     // Methods needed to create and run the client and this connected clientTUI:
@@ -50,7 +50,6 @@ public class ClientTUI {
      * console is needed.
      */
     public void go() {
-        // let your program ask for a server address, a server port and a username.
         System.out.println("Import a server address, a server port number and a username.");
         // enter the server address and the port that are the output of the ServerTUI to connect the server and client:
         System.out.println("First, enter the server address: ");
@@ -66,8 +65,10 @@ public class ClientTUI {
                 // automatically start. Then, all input from the server that is received via the clientHandler will
                 // be processed by the run() methods of the client thread:
                 if (client.connect(address, port)) {
+                    System.out.println("You are successfully connected. Type QUIT to stop.");
                     client.sendHello("Client by Arjonne");
                 }
+                // as long as "quit" is not used as input, the while loop will continue.
                 quit = false;
                 while (!(quit || System.in.available() > 0)) {
                     if (usernameCanBeCreated || usernameIsTaken) {
@@ -84,9 +85,11 @@ public class ClientTUI {
                 }
                 // handle exception when port number input was not a number and try again from the beginning:
             } catch (InputMismatchException e) {
-                System.out.println("No valid input: port number should be between 1 and 65535; use 0 for a random available port.");
+                System.out.println("No valid input: port number should be between 1 and 65535.");
+                // handle exception when scanner does not have enough space available to process the input, which will
+                // result in blocking.
             } catch (IOException e) {
-                System.out.println("Not possible.");
+                System.out.println("Not able to process the input.");
             }
             // handle exception when connection could not be established as address or port were not correct and try
             // again from the beginning:
@@ -166,7 +169,8 @@ public class ClientTUI {
         this.wantsToPlayNewGame = wantsToPlayNewGame;
     }
 
-    // Methods to continuously check on "quit" input in the console to be able to quit at every possible moment.
+    // Methods to continuously check on "quit" or invalid input in the console to be able to quit at every possible
+    // moment or to prevent wrong processing of input when it contains a "~".
 
     /**
      * Checks whether the input from the console is equal to quit.
@@ -182,6 +186,19 @@ public class ClientTUI {
         return false;
     }
 
+    /**
+     * Checks whether the input from the console contains a ~.
+     */
+    public void checkForTilde() {
+        while (input.contains(SEPARATOR)) {
+            System.out.println("Invalid input: it may not contain a ~. Try again:");
+            input = scanner.nextLine();
+            if (checkForQuitInput()) {
+                return;
+            }
+        }
+    }
+
     // Methods that can be called by the client by changing the state of a boolean:
 
     /**
@@ -193,13 +210,7 @@ public class ClientTUI {
         if (checkForQuitInput()) {
             return;
         }
-        while (input.contains(SEPARATOR)) {
-            System.out.println("Invalid username: it may not contain a ~. Try again:");
-            input = scanner.nextLine();
-            if (checkForQuitInput()) {
-                return;
-            }
-        }
+        checkForTilde();
         client.setUsername(input);
         client.sendUsername(input);
         usernameCanBeCreated = false;
@@ -215,19 +226,23 @@ public class ClientTUI {
         if (checkForQuitInput()) {
             return;
         }
+        checkForTilde();
         while (!(input.equals("YES") || input.equals("NO"))) {
             System.out.println("Unable to understand your input. Try again:");
             input = scanner.nextLine().toUpperCase();
             if (checkForQuitInput()) {
                 return;
             }
+            checkForTilde();
         }
         if (input.equals("YES")) {
             System.out.println("You have successfully entered the queue. Waiting for a second player....");
             client.sendQueue();
         } else {
             System.out.println("The connection will be broken.");
+            client.close();
             client.sendQuit();
+            System.out.println("Disconnected");
             quit = true;
         }
         wantsToEnterQueue = false;
@@ -244,21 +259,23 @@ public class ClientTUI {
         if (checkForQuitInput()) {
             return;
         }
+        checkForTilde();
         while (!(input.equals("OWN") || input.equals("COMPUTER"))) {
             System.out.println("Unable to understand your input. Try again:");
             input = scanner.nextLine().toUpperCase();
             if (checkForQuitInput()) {
                 return;
             }
+            checkForTilde();
         }
         if (input.equals("OWN")) {
             humanPlayer = new Player(username, stone);
             setPlayerType(humanPlayer);
-            System.out.println("Human player created. Wait for your turn.");
+            System.out.println("Human player created.");
         } else {
             ComputerPlayer computerPlayer = new ComputerPlayer(username, stone);
             setPlayerType(computerPlayer);
-            System.out.println("Computer player created. Wait for your turn.");
+            System.out.println("Computer player created.");
         }
         wantsToCreatePlayerType = false;
     }
@@ -275,7 +292,7 @@ public class ClientTUI {
     /**
      * Gets the player type after creating the new player.
      *
-     * @param playerType is the player type the player using this client wants to use
+     * @param playerType is the player type the player using this client wants to use.
      */
     public void setPlayerType(Player playerType) {
         this.playerType = playerType;
@@ -291,12 +308,14 @@ public class ClientTUI {
         if (checkForQuitInput()) {
             return;
         }
+        checkForTilde();
         while (!(input.equals("YES") || input.equals("NO"))) {
             System.out.println("Unable to understand your input. Try again:");
             input = scanner.nextLine().toUpperCase();
             if (checkForQuitInput()) {
                 return;
             }
+            checkForTilde();
         }
         if (input.equals("YES")) {
             client.sendQueue();
@@ -338,12 +357,13 @@ public class ClientTUI {
         if (checkForQuitInput()) {
             return null;
         }
+        checkForTilde();
         if (input.equals("PASS")) {
             return null;
         } else if (input.equals("MOVE")) {
             boolean correctInput = false;
             while (!correctInput) {
-                System.out.print("On what intersection do you want to place your stone? First, enter the row number (ranging between 1 and " + Board.SIZE + "): ");
+                System.out.print("On what intersection do you want to place your stone? \nFirst, enter the row number (ranging between 1 and " + Board.SIZE + "): ");
                 try {
                     row = (scanner.nextInt() - 1);
                     System.out.print("Now, enter the column number (ranging between 1 and " + (Board.SIZE) + "): ");
