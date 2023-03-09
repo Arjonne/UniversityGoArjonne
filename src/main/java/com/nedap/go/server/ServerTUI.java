@@ -20,8 +20,8 @@ public class ServerTUI {
                 port = scanner.nextInt();
             }
             // create and start a new server with the port input from above
-            Server server = new Server(port, InetAddress.getLocalHost());
-//            Server server = new Server(port, InetAddress.getByName("192.168.8.102"));
+//            Server server = new Server(port, InetAddress.getLocalHost())
+            Server server = new Server(port, InetAddress.getByName("192.168.8.101"));
             server.start();
             System.out.println("Port number on which this server is accepting clients is: " + server.getPort());
             System.out.println("If you want to stop the server, type QUIT.");
